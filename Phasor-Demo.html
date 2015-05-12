@@ -1,0 +1,76 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>hello phaser!</title>
+        <script src="phaser.js"></script>
+        <script src="https://raw.githubusercontent.com/toji/gl-matrix/master/dist/gl-matrix.js"></script>
+		<script src="CreatureMeshBone.js"></script>
+		<script src="CreaturePixiJSRenderer.js"></script>
+		<script src="CreaturePhaserRenderer.js"></script>
+    </head>
+    <body>
+
+    <script type="text/javascript">
+
+    window.onload = function() {
+
+        var game = new Phaser.Game(800, 600, Phaser.WEBGL, '', { preload: preload, create: create });
+        var texture = null;
+        var new_creature = null;
+        var new_animation_1 = null;
+        var new_animation_2 = null;
+        var new_manager = null;
+        var creaturePhasorObject = null;
+
+        function preload () {
+
+            //game.load.image('logo', 'phaser.png');
+            game.load.text('dragonJSON', 'dragonTest.json');
+             
+            // create a texture from an image path
+    		texture = PIXI.Texture.fromImage("character-dragon.png");
+			
+        }
+
+        function create () {
+
+            //var logo = game.add.sprite(game.world.centerX, game.world.centerY, 'logo');
+            //logo.anchor.setTo(0.5, 0.5);
+            
+            // Core Creature Objects
+			var actual_JSON = JSON.parse(game.cache.getText('dragonJSON'));
+			
+			new_creature = new Creature(actual_JSON);
+			
+			new_animation_1 = new CreatureAnimation(actual_JSON, "default", new_creature);
+			new_animation_2 = new CreatureAnimation(actual_JSON, "pose2", new_creature);
+			
+			new_manager = new CreatureManager(new_creature);
+			new_manager.AddAnimation(new_animation_1);
+			new_manager.AddAnimation(new_animation_2);
+			new_manager.SetActiveAnimationName("pose2", false);
+			new_manager.SetShouldLoop(true);
+			new_manager.SetIsPlaying(true);
+			new_manager.RunAtTime(0);
+			
+			console.log('Loaded and created Core Creature Objects.');
+			
+			// Phasor Creature Object
+			creaturePhasorObject = new Phaser.CreatureDraw(game.world, 
+													game.world.centerX, 
+													game.world.centerY,
+													new_manager,
+													texture);
+			creaturePhasorObject.scale.set(35.0);
+			game.world.add(creaturePhasorObject);
+			
+						
+        }
+
+    };
+
+    </script>
+
+    </body>
+</html>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+	
+	<head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+      <title>Three.js - Basic scene</title>
+      
+      <style>
+  		html, body {
+    		overflow: hidden;
+    		width: 100%;
+    		height: 100%;
+    		margin: 0;
+    		padding: 0;
+  		}
+
+		canvas { width: 100%; height: 100% }
+	  </style>
+
+   </head>
+   
+<body>
+
+<h1>My First Web Page</h1>
+
+<p>My first paragraph.</p>
+
+<script src="http://threejs.org/build/three.min.js"></script>
+<script src="https://raw.githubusercontent.com/toji/gl-matrix/master/dist/gl-matrix.js"></script>
+<script src="CreatureMeshBone.js"></script>
+<script src="CreatureThreeJSRenderer.js"></script>
+
+<script>
+
+    var xobj = new XMLHttpRequest();
+        xobj.overrideMimeType("application/json");
+	xobj.open('GET', 'default.json', true); // Replace 'my_data' with the path to your file
+	xobj.onreadystatechange = function () {
+          if (xobj.readyState == 4 && xobj.status == "200") {
+            // Required use of an anonymous callback as .open will NOT return a value but simply returns undefined in asynchronous mode
+//            callback(xobj.responseText);
+            var response = xobj.responseText;
+              	// Parse JSON string into object
+			var actual_JSON = JSON.parse(response);
+			
+			var scene;
+			var camera;
+			var renderer;
+			var new_creature;
+			var new_manager;
+			var new_creature_renderer;
+			
+			
+			function initScene() {
+				// Create scene
+			    scene = new THREE.Scene();
+
+	    		// This creates and positions a free camera
+	    		camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+				camera.position.z = -20;
+				camera.lookAt(scene.position);
+				scene.add(camera);
+	
+				// create renderer
+				renderer = new THREE.WebGLRenderer();
+				renderer.setSize(window.innerWidth, window.innerHeight );
+				document.body.appendChild( renderer.domElement );
+				
+				new_creature = new Creature(actual_JSON);
+			
+				var new_animation_1 = new CreatureAnimation(actual_JSON, "default", new_creature);
+				var new_animation_2 = new CreatureAnimation(actual_JSON, "second", new_creature);
+			
+				new_manager = new CreatureManager(new_creature);
+				new_manager.AddAnimation(new_animation_1);
+				new_manager.AddAnimation(new_animation_2);
+				new_manager.SetActiveAnimationName("default", false);
+				new_manager.SetShouldLoop(true);
+				new_manager.SetIsPlaying(true);
+				new_manager.RunAtTime(0);
+
+
+			
+				//var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+				var texture = new THREE.ImageUtils.loadTexture("character-dragon.png");
+				var material = new THREE.MeshBasicMaterial({
+	        		map: texture,
+	        		transparent: true,
+        			side:THREE.DoubleSide
+      			});
+      		
+						
+  				// Create creature renderer
+				new_creature_renderer = new CreatureRenderer("CreatureRenderer",
+  															 scene, new_manager, 
+  															 material);
+  				
+  				// Flip creature to the right
+  				new_creature_renderer.renderMesh.scale.x = -1;
+  			}
+
+			var animateScene = function () {
+			    new_manager.Update(0.05);
+				new_creature_renderer.UpdateData();
+
+				requestAnimationFrame(animateScene);
+				renderer.render(scene, camera);
+			};
+
+			initScene();
+			animateScene();
+						  			  			
+          }
+    };
+    xobj.send(null);  
+ 
+ 
+  </script>
+
+</body>
+</html> 

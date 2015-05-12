@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+	
+	<head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+      <title>Babylon - Basic scene</title>
+      
+      <style>
+  		html, body {
+    		overflow: hidden;
+    		width: 100%;
+    		height: 100%;
+    		margin: 0;
+    		padding: 0;
+  		}
+
+  		#renderCanvas {
+    		width: 100%;
+    		height: 100%;
+    		touch-action: none;
+  		}
+	  </style>
+
+   </head>
+   
+<body>
+
+<h1>My First Web Page</h1>
+
+<p>My first paragraph.</p>
+
+<canvas id="renderCanvas"></canvas>
+
+<script src="http://www.babylonjs.com/babylon.js"></script>
+<script src="http://www.babylonjs.com/hand.minified-1.2.js"></script>
+<script src="https://raw.githubusercontent.com/toji/gl-matrix/master/dist/gl-matrix.js"></script>
+<script src="CreatureMeshBone.js"></script>
+<script src="CreatureRenderer.js"></script>
+
+<script>
+
+    var xobj = new XMLHttpRequest();
+        xobj.overrideMimeType("application/json");
+	xobj.open('GET', 'default.json', true); // Replace 'my_data' with the path to your file
+	xobj.onreadystatechange = function () {
+          if (xobj.readyState == 4 && xobj.status == "200") {
+            // Required use of an anonymous callback as .open will NOT return a value but simply returns undefined in asynchronous mode
+//            callback(xobj.responseText);
+            var response = xobj.responseText;
+              	// Parse JSON string into object
+			var actual_JSON = JSON.parse(response);
+			//document.write("Loaded JSON file: ");
+			
+			var new_creature = new Creature(actual_JSON);
+			
+			var new_animation_1 = new CreatureAnimation(actual_JSON, "default", new_creature);
+			var new_animation_2 = new CreatureAnimation(actual_JSON, "second", new_creature);
+			
+			var new_manager = new CreatureManager(new_creature);
+			new_manager.AddAnimation(new_animation_1);
+			new_manager.AddAnimation(new_animation_2);
+			new_manager.SetActiveAnimationName("default", false);
+			new_manager.SetShouldLoop(true);
+			new_manager.SetIsPlaying(true);
+			new_manager.RunAtTime(0);
+			
+  			// Get the canvas element from our HTML above
+  			var canvas = document.getElementById("renderCanvas");
+
+  			// Load the BABYLON 3D engine
+  			var engine = new BABYLON.Engine(canvas, true);
+  			
+  			
+  			// Now, call the createScene function that you just finished creating
+  			var data = createScene(canvas, engine);
+  			
+  			// Create creature renderer
+  			var new_creature_renderer = new CreatureRenderer("CreatureRenderer",
+  															 data.scene, new_manager, 
+  															 data.creature_texture);
+
+			// Register a render loop to repeatedly render the scene
+  			engine.runRenderLoop(function () {
+			    new_manager.Update(0.05);
+				new_creature_renderer.UpdateData();
+
+				//new_creature_renderer.renderMesh.scaling = new BABYLON.Vector3(-1, 1, 1);
+				
+    			data.scene.render();
+  			});
+  			
+  			// Watch for browser/canvas resize events
+  			window.addEventListener("resize", function () {
+    			engine.resize();
+  			});
+          }
+    };
+    xobj.send(null);  
+ 
+ 
+  // This begins the creation of a function that we will 'call' just after it's built
+  var createScene = function (canvas, engine) {
+
+    // Now create a basic Babylon Scene object 
+    var scene = new BABYLON.Scene(engine);
+
+    // This creates and positions a free camera
+    var camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 0, -30), scene);
+
+    // This targets the camera to scene origin
+    camera.setTarget(new BABYLON.Vector3.Zero());
+
+    // This attaches the camera to the canvas
+    camera.attachControl(canvas, false);
+
+    // This creates a light, aiming 0,1,0 - to the sky.
+    var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
+
+    // Dim the light a small amount
+    light.intensity = 0;
+
+	// creature
+	var creature_texture = new BABYLON.StandardMaterial("creatureTexture", scene);
+	//creature_texture.emissiveColor = new BABYLON.Color3(1, 1, 1);
+	creature_texture.diffuseTexture = new BABYLON.Texture("character-dragon.png", scene);
+	creature_texture.diffuseTexture.hasAlpha = true;
+	creature_texture.emissiveTexture = new BABYLON.Texture("character-dragon.png", scene);
+	//creature_texture.emissiveColor = new BABYLON.Color3(1, 1, 1);
+	creature_texture.backFaceCulling = false;
+	
+    // Leave this function
+    return {"scene":scene, "creature_texture":creature_texture};
+
+  };  // End of createScene function
+</script>
+
+</body>
+</html> 
