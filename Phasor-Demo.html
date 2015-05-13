@@ -15,26 +15,36 @@
 
     window.onload = function() {
 
-        var game = new Phaser.Game(800, 600, Phaser.WEBGL, '', { preload: preload, create: create });
+        var game = new Phaser.Game(800, 600, Phaser.WEBGL, '', { preload: preload, create: create, update: update});
         var texture = null;
         var new_creature = null;
         var new_animation_1 = null;
         var new_animation_2 = null;
         var new_manager = null;
         var creaturePhasorObject = null;
+        
+        // For testing
+        var new_manager2 = null;
+        var creaturePhasorObject2 = null;
 
         function preload () {
 
             //game.load.image('logo', 'phaser.png');
-            game.load.text('dragonJSON', 'dragonTest.json');
+            game.load.text('dragonJSON', 'character_data.json');
              
             // create a texture from an image path
-    		texture = PIXI.Texture.fromImage("character-dragon.png");
+    		texture = PIXI.Texture.fromImage("character_img.png");
 			
+        }
+        
+        function initDebugging()
+        {
+        	bmd = game.add.bitmapData(800,600);
+            sprite = game.add.sprite(0, 0, bmd); 
         }
 
         function create () {
-
+			initDebugging();
             //var logo = game.add.sprite(game.world.centerX, game.world.centerY, 'logo');
             //logo.anchor.setTo(0.5, 0.5);
             
@@ -44,28 +54,87 @@
 			new_creature = new Creature(actual_JSON);
 			
 			new_animation_1 = new CreatureAnimation(actual_JSON, "default", new_creature);
-			new_animation_2 = new CreatureAnimation(actual_JSON, "pose2", new_creature);
+			//new_animation_2 = new CreatureAnimation(actual_JSON, "pose2", new_creature);
 			
 			new_manager = new CreatureManager(new_creature);
 			new_manager.AddAnimation(new_animation_1);
-			new_manager.AddAnimation(new_animation_2);
-			new_manager.SetActiveAnimationName("pose2", false);
+			//new_manager.AddAnimation(new_animation_2);
+			new_manager.SetActiveAnimationName("default", false);
 			new_manager.SetShouldLoop(true);
 			new_manager.SetIsPlaying(true);
-			new_manager.RunAtTime(0);
+			//new_manager.RunAtTime(0);
 			
 			console.log('Loaded and created Core Creature Objects.');
 			
 			// Phasor Creature Object
+			
 			creaturePhasorObject = new Phaser.CreatureDraw(game.world, 
 													game.world.centerX, 
 													game.world.centerY,
 													new_manager,
 													texture);
-			creaturePhasorObject.scale.set(35.0);
+			creaturePhasorObject.scale.set(15.0);
+			creaturePhasorObject.timeDelta = 0.035;
 			game.world.add(creaturePhasorObject);
 			
-						
+			
+			// Second object for testing
+			/*
+			new_manager2 = new CreatureManager(new_creature);
+			new_manager2.AddAnimation(new_animation_1);
+			//new_manager2.AddAnimation(new_animation_2);
+			new_manager2.SetActiveAnimationName("default", false);
+			new_manager2.SetShouldLoop(true);
+			new_manager2.SetIsPlaying(true);
+			new_manager2.RunAtTime(0);
+			
+			creaturePhasorObject2 = new Phaser.CreatureDraw(game.world, 
+													game.world.centerX, 
+													game.world.centerY,
+													new_manager2,
+													texture);
+			creaturePhasorObject2.scale.set(15.0);
+			creaturePhasorObject2.timeDelta = 0.1;
+			game.world.add(creaturePhasorObject2);
+			*/
+        }
+        
+        function update() {
+        	// for debugging
+        	
+        	// draw boundary rectangles
+        	/*
+        	var target_creature = creaturePhasorObject.creature_manager.target_creature;
+        	
+        	bmd.clear();
+        	
+        	var dbgPt = new PIXI.Point(0,0);
+        	for(var i = 0; i < target_creature.boundary_indices.length; i++)
+        	{
+        		var ref_idx = target_creature.boundary_indices[i] * 3;
+				var ref_x = target_creature.render_pts[ref_idx];
+				var ref_y = target_creature.render_pts[ref_idx + 1];
+				
+				dbgPt.set(ref_x, -ref_y);
+				creaturePhasorObject.worldTransform.apply(dbgPt, dbgPt);	
+					
+				bmd.ctx.fillStyle = "rgb(200,0,0)";
+				bmd.ctx.fillRect(dbgPt.x, dbgPt.y, 5, 5);
+        	}
+        	
+        	
+        	bmd.ctx.beginPath();
+        	bmd.ctx.strokeStyle = "white";
+            bmd.ctx.lineWidth = 10;
+        	bmd.ctx.rect(creaturePhasorObject.creatureBoundsMin.x,
+        										creaturePhasorObject.creatureBoundsMin.y,
+        										creaturePhasorObject.creatureBoundsMax.x - creaturePhasorObject.creatureBoundsMin.x,
+        										creaturePhasorObject.creatureBoundsMax.y - creaturePhasorObject.creatureBoundsMin.y);
+        	bmd.ctx.stroke();
+        	
+        	
+        	bmd.dirty = true;
+        	*/
         }
 
     };

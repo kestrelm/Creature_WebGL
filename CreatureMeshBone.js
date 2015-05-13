@@ -1467,7 +1467,7 @@ MeshBoneCacheManager.prototype.retrieveValuesAtTime = function(time_in, bone_map
   var base_time = this.getIndexByTime(Math.floor(time_in));
   var end_time = this.getIndexByTime(Math.ceil(time_in));
 
-  var ratio = (time_in - base_time);
+  var ratio = (time_in - Math.floor(time_in));
 
   if(this.bone_cache_data_ready.length == 0) {
     return;
@@ -1583,7 +1583,7 @@ MeshDisplacementCacheManager.prototype.retrieveValuesAtTime = function(time_in, 
   var base_time = this.getIndexByTime(Math.floor(time_in));
   var end_time = this.getIndexByTime(Math.ceil(time_in));
 
-  var ratio = (time_in - base_time);
+  var ratio = (time_in - Math.floor(time_in));
 
   if(this.displacement_cache_data_ready.length == 0) {
     return;
@@ -1740,7 +1740,7 @@ MeshUVWarpCacheManager.prototype.retrieveValuesAtTime = function(time_in, region
   var base_time = this.getIndexByTime(Math.floor(time_in));
   var end_time = this.getIndexByTime(Math.ceil(time_in));
 
-  var ratio = (time_in - base_time);
+  var ratio = (time_in - Math.floor(time_in));
 
   if(this.uv_cache_data_ready.length == 0) {
     return;
@@ -2068,6 +2068,10 @@ CreatureModuleUtils.GetStartEndTimes = function(json_obj, key)
     else {
       if(cur_num > end_time) {
         end_time = cur_num;
+      }
+      
+      if(cur_num < start_time) {
+        start_time = cur_num;
       }
     }
   }
