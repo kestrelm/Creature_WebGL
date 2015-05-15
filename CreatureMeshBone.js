@@ -921,55 +921,20 @@ MeshRenderRegion.prototype.poseFinalPts = function(output_pts, output_start_inde
     // var accum_dq = new dualQuat();
     accum_dq.reset();
 
-    var n_index = 0;
     for (var j = 0; j < boneKeyLength; j++)
     {
-      var cur_key = boneKeys[j];
-      //var cur_bone = bones_map[cur_key];
-      var cur_bone = this.fast_bones_map[n_index];
-      var cur_weight_val = 0;
-      
-      
-      if(this.fast_normal_weight_map.length > 0) {
-        cur_weight_val = this.fast_normal_weight_map[n_index][i];
-      }
-      else {
-        cur_weight_val = this.normal_weight_map[cur_key][i];
-      }
-      
-      //cur_weight_val = this.normal_weight_map[cur_key][i];
-
+      var cur_bone = this.fast_bones_map[j];
+      var cur_weight_val = this.fast_normal_weight_map[j][i];
       var cur_im_weight_val = cur_weight_val;
 
-      if(this.use_dq == false) {
-        var world_delta_mat = cur_bone.getWorldDeltaMat();
-        //accum_mat = Utils.addMat(accum_mat, Utils.mulMat(world_delta_mat, cur_weight_val));
-        
-        var tmpMat = Utils.mulMat(world_delta_mat, cur_weight_val);
-        accum_mat = Utils.addMat(accum_mat, tmpMat);
-      }
-      else {
-        var world_dq = cur_bone.getWorldDq();
-        accum_dq.add(world_dq, cur_weight_val, cur_im_weight_val);
-      }
-
-      n_index++;
+       var world_dq = cur_bone.getWorldDq();
+       accum_dq.add(world_dq, cur_weight_val, cur_im_weight_val);
     }
 
-    if(this.use_dq == false) {
-      var tmp_pt = vec3.set(tmp2, cur_rest_pt[Q_X], cur_rest_pt[Q_Y], cur_rest_pt[Q_Z]);
-      // var tmp_pt = vec3.fromValues(cur_rest_pt[Q_X], cur_rest_pt[Q_Y], cur_rest_pt[Q_Z]);
-      //accum_mat.tra();
-      
-      //final_pt = tmp_pt.traMul(accum_mat);
-      final_pt = vec3.transformMat4(final_pt, tmp_pt, accum_mat);
-    }
-    else {
-      accum_dq.normalize();
-      var tmp_pt = vec3.set(tmp2, cur_rest_pt[Q_X], cur_rest_pt[Q_Y], cur_rest_pt[Q_Z]);
-      // var tmp_pt = vec3.fromValues(cur_rest_pt[Q_X], cur_rest_pt[Q_Y], cur_rest_pt[Q_Z]);
-      final_pt = accum_dq.transform(tmp_pt);
-    }
+    accum_dq.normalize();
+    var tmp_pt = vec3.set(tmp2, cur_rest_pt[Q_X], cur_rest_pt[Q_Y], cur_rest_pt[Q_Z]);
+    // var tmp_pt = vec3.fromValues(cur_rest_pt[Q_X], cur_rest_pt[Q_Y], cur_rest_pt[Q_Z]);
+    final_pt = accum_dq.transform(tmp_pt);
 
     // debug start
 
