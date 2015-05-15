@@ -826,6 +826,7 @@ function MeshRenderRegion(indices_in, rest_pts_in, uvs_in, start_pt_index_in, en
 	this.normal_weight_map = {};
 	this.fast_normal_weight_map = [];
 	this.fast_bones_map = [];
+	this.relevant_bones_indices = [];
 	this.use_dq = true;
 	this.tag_id = -1;
 
@@ -899,6 +900,7 @@ MeshRenderRegion.prototype.poseFinalPts = function(output_pts, output_start_inde
 
   var boneKeys = Object.keys(bones_map);
   var boneKeyLength = boneKeys.length;
+  
   for(var i = 0, l = this.getNumPts(); i < l; i++) {
     var cur_rest_pt =
       vec3.set(tmp1, this.store_rest_pts[0 + read_pt_index],
@@ -921,10 +923,13 @@ MeshRenderRegion.prototype.poseFinalPts = function(output_pts, output_start_inde
     // var accum_dq = new dualQuat();
     accum_dq.reset();
 
-    for (var j = 0; j < boneKeyLength; j++)
+	var curBoneIndices = this.relevant_bones_indices[i];
+  	var relevantIndicesLength = curBoneIndices.length;
+    for (var j = 0; j < relevantIndicesLength; j++)
     {
-      var cur_bone = this.fast_bones_map[j];
-      var cur_weight_val = this.fast_normal_weight_map[j][i];
+      var idx_lookup = curBoneIndices[j];
+      var cur_bone = this.fast_bones_map[idx_lookup];
+      var cur_weight_val = this.fast_normal_weight_map[idx_lookup][i];
       var cur_im_weight_val = cur_weight_val;
 
        var world_dq = cur_bone.getWorldDq();
@@ -1146,10 +1151,28 @@ MeshRenderRegion.prototype.setTagId = function(value_in)
 
 MeshRenderRegion.prototype.initFastNormalWeightMap = function(bones_map)
 {
+  this.relevant_bones_indices = [];
+  
   // fast normal weight map lookup, avoids hash lookups
   for (var cur_key in bones_map) {
     var values = this.normal_weight_map[cur_key];
     this.fast_normal_weight_map.push(values);
+  }
+  
+  // relevant bone indices
+  var cutoff_val = 0.05;
+   for(var i = 0; i < this.getNumPts(); i++) {
+  	var curIndicesArray = [];
+   	for (var j = 0; j < this.fast_normal_weight_map.length; j++)
+  	{
+  		var cur_val = this.fast_normal_weight_map[j][i];
+  		if(cur_val > cutoff_val)
+  		{
+  			curIndicesArray.push(j);
+  		}  		
+  	}
+  	
+  	this.relevant_bones_indices.push(curIndicesArray);
   }
   
   // fast bone map lookup
