@@ -2368,6 +2368,7 @@ function CreatureAnimation(load_data, name_in)
     this.bones_cache = new MeshBoneCacheManager();
     this.displacement_cache = new MeshDisplacementCacheManager();
     this.uv_warp_cache = new MeshUVWarpCacheManager();
+    this.cache_pts = [];
 
     this.LoadFromData(name_in, load_data);	
 };
@@ -2401,6 +2402,40 @@ CreatureAnimation.prototype.LoadFromData = function(name_in, load_data)
       this.start_time,
       this.end_time,
       this.uv_warp_cache);
+};
+
+CreatureAnimation.prototype.getIndexByTime = function(time_in)
+{
+  var retval = time_in - this.start_time;
+  retval = Utils.clamp(retval, 0, (this.cache_pts.length) - 1);
+
+  return retval;
+};
+
+CreatureAnimation.prototype.poseFromCachePts = function(time_in, target_pts, num_pts)
+{
+        var cur_floor_time = this.getIndexByTime(Math.floor(time_in));
+        var cur_ceil_time = this.getIndexByTime(Math.ceil(time_in));
+        var cur_ratio = time_in - Math.floor(time_in);
+        
+        var set_pt = target_pts;
+        var floor_pts = this.cache_pts[cur_floor_time];
+        var ceil_pts = this.cache_pts[cur_ceil_time];
+        
+        var set_idx = 0;
+        var floor_idx = 0;
+        var ceil_idx = 0;
+        
+        for(var i = 0; i < num_pts; i++)
+        {
+            set_pt[set_idx + 0] = ((1.0 - cur_ratio) * floor_pts[floor_idx + 0]) + (cur_ratio * ceil_pts[ceil_idx + 0]);
+            set_pt[set_idx + 1] = ((1.0 - cur_ratio) * floor_pts[floor_idx + 1]) + (cur_ratio * ceil_pts[ceil_idx + 1]);
+            set_pt[set_idx + 2] = ((1.0 - cur_ratio) * floor_pts[floor_idx + 2]) + (cur_ratio * ceil_pts[ceil_idx + 2]);
+
+            set_idx += 3;
+            floor_idx += 3;
+            ceil_idx += 3;
+        }
 };
 
 // CreatureManager
@@ -2540,6 +2575,33 @@ CreatureManager.prototype.GetAllAnimations = function()
   return this.animations;
 };
 
+// Creates a point cache for the current animation
+CreatureManager.prototype.MakePointCache = function(animation_name_in)
+{
+        var store_run_time = this.getRunTime();
+        var cur_animation = this.animations[animation_name_in];
+        if(cur_animation.length > 0)
+        {
+            // cache already generated, just exit
+            return;
+        }
+        
+        var cache_pts_list = cur_animation.cache_pts;
+        
+        for(var i = cur_animation.start_time; i <= cur_animation.end_time; i++)
+        {
+            this.setRunTime(i);
+            var new_pts = [];
+            for (var j = 0; j < this.target_creature.total_num_pts * 3; j++) new_pts[j] = 0; 
+            //auto new_pts = new glm::float32[target_creature->GetTotalNumPoints() * 3];
+            this.PoseCreature(animation_name_in, new_pts);
+            
+            cache_pts_list.push(new_pts);
+        }
+        
+        this.setRunTime(store_run_time);
+};
+
 // Returns if animation is playing
 CreatureManager.prototype.GetIsPlaying = function()
 {
@@ -2662,7 +2724,14 @@ CreatureManager.prototype.RunCreature = function()
   if(this.do_blending)
   {
     for(var i = 0; i < 2; i++) {
-      this.PoseCreature(this.active_blend_animation_names[i], this.blend_render_pts[i]);
+      var cur_animation = this.animations[this.active_blend_animation_names[i]];
+      if(cur_animation.cache_pts.length > 0)
+      {
+      	cur_animation.poseFromCachePts(this.getRunTime(), this.blend_render_pts[i], this.target_creature.total_num_pts);
+      }
+      else {
+	  	this.PoseCreature(this.active_blend_animation_names[i], this.blend_render_pts[i]);
+	  }
     }
 
     for(var j = 0; j < this.target_creature.total_num_pts * 3; j++)
@@ -2682,7 +2751,15 @@ CreatureManager.prototype.RunCreature = function()
     }
   }
   else {
-    this.PoseCreature(this.active_animation_name, this.target_creature.render_pts);
+    var cur_animation = this.animations[this.active_animation_name];
+    if(cur_animation.cache_pts.length > 0)
+    {
+    	cur_animation.poseFromCachePts(this.getRunTime(), this.target_creature.render_pts, this.target_creature.total_num_pts);
+    	// cur_animation->poseFromCachePts(getRunTime(), target_creature->GetRenderPts(), target_creature->GetTotalNumPoints());
+    }
+    else {
+		this.PoseCreature(this.active_animation_name, this.target_creature.render_pts);
+	}
   }
 };
 
