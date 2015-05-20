@@ -2369,6 +2369,7 @@ function CreatureAnimation(load_data, name_in)
     this.displacement_cache = new MeshDisplacementCacheManager();
     this.uv_warp_cache = new MeshUVWarpCacheManager();
     this.cache_pts = [];
+    this.fill_cache_pts = [];
 
     this.LoadFromData(name_in, load_data);	
 };
@@ -2410,6 +2411,15 @@ CreatureAnimation.prototype.getIndexByTime = function(time_in)
   retval = Utils.clamp(retval, 0, (this.cache_pts.length) - 1);
 
   return retval;
+};
+
+CreatureAnimation.prototype.verifyFillCache = function()
+{
+	if(this.fill_cache_pts.length == (this.end_time - this.start_time + 1))
+	{
+		// ready to switch over
+		this.cache_pts = this.fill_cache_pts;
+	}
 };
 
 CreatureAnimation.prototype.poseFromCachePts = function(time_in, target_pts, num_pts)
@@ -2600,6 +2610,26 @@ CreatureManager.prototype.MakePointCache = function(animation_name_in)
         }
         
         this.setRunTime(store_run_time);
+};
+
+// Fills up a single frame for a point cache animation
+// Point caching is only enabled when the cache is FULLY filled up
+// Remember the new filled cache is Appended onto the end of a list
+// There is no indexing by time here so MAKE SURE this cache is filled up sequentially!
+CreatureManager.prototype.FillSinglePointCacheFrame = function(animation_name_in, time_in)
+{
+	var store_run_time = this.getRunTime();
+    var cur_animation = this.animations[animation_name_in];
+	
+	this.setRunTime(time_in);
+    var new_pts = [];
+    for (var j = 0; j < this.target_creature.total_num_pts * 3; j++) new_pts[j] = 0; 
+    this.PoseCreature(animation_name_in, new_pts);
+    
+    cur_animation.fill_cache_pts.push(new_pts);
+    cur_animation.verifyFillCache();
+
+    this.setRunTime(store_run_time);
 };
 
 // Returns if animation is playing
