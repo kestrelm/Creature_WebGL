@@ -1,4 +1,6 @@
-﻿function GetPluginSettings()
+﻿// Initial Plugin Development started by: R0J0hound 
+
+function GetPluginSettings()
 {
 	return {
 		"name":			"Creature2d",				// as appears in 'insert object' dialog, can be changed as long as "id" stays the same
