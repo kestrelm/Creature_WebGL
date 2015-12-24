@@ -175,17 +175,22 @@ IDEInstance.prototype.OnPropertyChanged = function(property_name)
 // For rendered objects to load fonts or textures
 IDEInstance.prototype.OnRendererInit = function(renderer)
 {
+	renderer.LoadTexture(this.instance.GetTexture());
 }
 
 // Called to draw self in the editor if a layout object
 IDEInstance.prototype.Draw = function(renderer)
 {
+	renderer.SetTexture(this.instance.GetTexture());
+
 	var q=this.instance.GetBoundingQuad();
-	renderer.Fill(q, cr.RGB(255,255,255));
+	//renderer.Fill(q, cr.RGB(255,255,255));
+	renderer.Quad(q);
 	renderer.Outline(q, cr.RGB(0,0,0));
 }
 
 // For rendered objects to release fonts or textures
 IDEInstance.prototype.OnRendererReleased = function(renderer)
 {
+	renderer.ReleaseTexture(this.instance.GetTexture());
 }
