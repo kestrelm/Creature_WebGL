@@ -30,10 +30,10 @@
         function preload () {
 
             //game.load.image('logo', 'phaser.png');
-            game.load.text('dragonJSON', 'character_data.json');
+            game.load.text('dragonJSON', 'debug3Export_character_data.json');
              
             // create a texture from an image path
-    		texture = PIXI.Texture.fromImage("character_img.png");
+    		texture = PIXI.Texture.fromImage("debug3Export_character_img.png");
 			
         }
         
@@ -53,13 +53,13 @@
 			
 			new_creature = new Creature(actual_JSON);
 			
-			new_animation_1 = new CreatureAnimation(actual_JSON, "default", new_creature);
+			new_animation_1 = new CreatureAnimation(actual_JSON, "idle", new_creature);
 			//new_animation_2 = new CreatureAnimation(actual_JSON, "pose2", new_creature);
 			
 			new_manager = new CreatureManager(new_creature);
 			new_manager.AddAnimation(new_animation_1);
 			//new_manager.AddAnimation(new_animation_2);
-			new_manager.SetActiveAnimationName("default", false);
+			new_manager.SetActiveAnimationName("idle", false);
 			new_manager.SetShouldLoop(true);
 			new_manager.SetIsPlaying(true);
 			//new_manager.RunAtTime(0);
@@ -84,7 +84,7 @@
 													game.world.centerY,
 													new_manager,
 													texture);
-			creaturePhasorObject.scale.set(15.0);
+			creaturePhasorObject.scale.set(35.0);
 			creaturePhasorObject.timeDelta = 0.035;
 			game.world.add(creaturePhasorObject);
 			

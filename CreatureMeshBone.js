@@ -2199,9 +2199,9 @@ CreatureModuleUtils.FillSwapUVPacketMap = function(json_obj)
 		for (var i = 0; i < cur_node.length; i++)
 		{
 			var packet_node = cur_node[i];
-			var local_offset = ReadVector2JSON(packet_node, "local_offset");
-			var global_offset = ReadVector2JSON(packet_node, "global_offset");
-			var scale = ReadVector2JSON(packet_node, "scale");
+			var local_offset = CreatureModuleUtils.ReadVector2JSON(packet_node, "local_offset");
+			var global_offset = CreatureModuleUtils.ReadVector2JSON(packet_node, "global_offset");
+			var scale = CreatureModuleUtils.ReadVector2JSON(packet_node, "scale");
 			var tag = packet_node["tag"];
 			
 			var new_packet = new CreatureUVSwapPacket(local_offset, global_offset, scale, tag);
@@ -2223,7 +2223,7 @@ CreatureModuleUtils.FillAnchorPointMap = function(json_obj)
 	for (var i = 0; i < anchor_data_node.length; i++)
 	{
 		var cur_node = anchor_data_node[i];
-		var cur_pt = ReadVector2JSON(cur_node, "point");
+		var cur_pt = CreatureModuleUtils.ReadVector2JSON(cur_node, "point");
 		var cur_name = cur_node["anim_clip_name"];
 
 		ret_map[cur_name] = cur_pt;
