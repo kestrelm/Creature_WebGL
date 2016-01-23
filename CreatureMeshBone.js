@@ -2179,6 +2179,59 @@ CreatureModuleUtils.FillUVSwapCache = function(json_obj, key, start_time, end_ti
   cache_manager.makeAllReady();
 };
 
+function CreatureUVSwapPacket (local_offset_in, global_offset_in, scale_in, tag_in)
+{
+	this.local_offset = local_offset_in;
+	this.global_offset = global_offset_in;
+	this.scale = scale_in;
+	this.tag = tag_in;
+};
+
+CreatureModuleUtils.FillSwapUVPacketMap = function(json_obj)
+{
+	ret_map = {};
+	for (var cur_key in json_obj)
+	{
+		var cur_node = json_obj[cur_key];
+		var cur_name = cur_key;
+		var cur_packets = [];
+
+		for (var i = 0; i < cur_node.length; i++)
+		{
+			var packet_node = cur_node[i];
+			var local_offset = ReadVector2JSON(packet_node, "local_offset");
+			var global_offset = ReadVector2JSON(packet_node, "global_offset");
+			var scale = ReadVector2JSON(packet_node, "scale");
+			var tag = packet_node["tag"];
+			
+			var new_packet = new CreatureUVSwapPacket(local_offset, global_offset, scale, tag);
+			cur_packets.push(new_packet);
+		}
+
+		
+		ret_map[cur_name] = cur_packets;
+	};
+
+	return ret_map;
+};
+
+CreatureModuleUtils.FillAnchorPointMap = function(json_obj)
+{
+	var anchor_data_node = json_obj["AnchorPoints"];
+
+	ret_map = {};
+	for (var i = 0; i < anchor_data_node.length; i++)
+	{
+		var cur_node = anchor_data_node[i];
+		var cur_pt = ReadVector2JSON(cur_node, "point");
+		var cur_name = cur_node["anim_clip_name"];
+
+		ret_map[cur_name] = cur_pt;
+	}
+
+	return ret_map;
+};
+
 // Creature
 function Creature(load_data)
 {
@@ -2193,8 +2246,32 @@ function Creature(load_data)
     this.boundary_indices = [];
     this.boundary_min = vec2.create();
     this.boundary_max = vec2.create();
+    this.uv_swap_packets = {};
+    this.active_uv_swap_actions = {};
+    this.anchor_point_map = {};
+    this.anchor_points_active = false;
 
     this.LoadFromData(load_data);	
+};
+
+Creature.prototype.SetActiveItemSwap = function(region_name, swap_idx)
+{
+	this.active_uv_swap_actions[region_name] = swap_idx;
+};
+
+Creature.prototype.RemoveActiveItemSwap = function(region_name)
+{
+	delete this.active_uv_swap_actions[region_name];
+};
+
+Creature.prototype.GetAnchorPoint = function(anim_clip_name_in)
+{
+	if(anim_clip_name_in in this.anchor_point_map)
+	{
+		return this.anchor_point_map[anim_clip_name_in];
+	}
+	
+	return vec2.fromValues(0, 0);
 };
 
 // Fills entire mesh with (r,g,b,a) colours
@@ -2359,6 +2436,21 @@ Creature.prototype.LoadFromData = function(load_data)
   }
 
   this.render_composition.resetToWorldRestPts();
+  
+  // Fill up uv swap packets
+  if("uv_swap_items" in load_data)
+  {
+  	var json_uv_swap_base = load_data["uv_swap_items"];
+  	this.uv_swap_packets = CreatureModuleUtils.FillSwapUVPacketMap(json_uv_swap_base);
+  }
+  
+  // Load Anchor Points
+  if("anchor_points_items" in load_data)
+  {
+  	var anchor_point_base = load_data["anchor_points_items"];
+  	this.anchor_point_map = CreatureModuleUtils.FillAnchorPointMap(anchor_point_base);
+  }
+  
 };
 
 // CreatureAnimation
@@ -2791,6 +2883,77 @@ CreatureManager.prototype.RunCreature = function()
 		this.PoseCreature(this.active_animation_name, this.target_creature.render_pts);
 	}
   }
+  
+  this.RunUVItemSwap();
+};
+
+function isDictEmpty(ob){
+   for(var i in ob){ return false;}
+  return true;
+}
+
+
+CreatureManager.prototype.RunUVItemSwap = function()
+{
+	var render_composition =
+    	this.target_creature.render_composition;
+	var regions_map =
+	    render_composition.getRegionsMap();
+	
+	var swap_packets = this.target_creature.uv_swap_packets;
+	var active_swap_actions = this.target_creature.active_uv_swap_actions;
+
+	if (isDictEmpty(swap_packets) || isDictEmpty(active_swap_actions))
+	{
+		return;
+	}
+
+	for(var cur_action_key in active_swap_actions)
+	{
+		if (cur_action_key in regions_map.count)
+		{
+			var swap_tag = active_swap_actions[cur_action_key];
+			var swap_list = this.swap_packets[cur_action_key];
+			for(var j = 0; j < swap_list.length; j++)
+			{
+				var cur_item = swap_list[j];
+				
+				if (cur_item.tag == swap_tag)
+				{
+					// Perfrom UV Item Swap
+					var cur_region = regions_map[cur_action_key];
+					cur_region.setUvWarpLocalOffset(cur_item.local_offset);
+					cur_region.setUvWarpGlobalOffset(cur_item.global_offset);
+					cur_region.setUvWarpScale(cur_item.scale);
+					cur_region.runUvWarp();
+
+					break;
+				}
+			}
+		}
+	}
+};
+
+CreatureManager.prototype.AlterBonesByAnchor = function(bones_map, animation_name_in)
+{
+	if(this.target_creature.anchor_points_active == false)
+	{
+		return;
+	}
+	
+	var anchor_point = this.target_creature.GetAnchor(animation_name_in);
+	for(var cur_bone_key in bones_map)
+	{
+		var cur_bone = bones_map[cur_bone_key];
+		var start_pt = cur_bone.getWorldStartPt();
+		var end_pt = cur_bone.getWorldEndPt();
+		
+		start_pt = start_pt - vec3.fromValues(anchor_point[0], anchor_point[1], 0);
+		end_pt = end_pt - vec3.fromValues(anchor_point[0], anchor_point[1], 0);
+		
+		cur_bone.setWorldStartPt(start_pt);
+		cur_bone.setWorldEndPt(end_pt);
+	}
 };
 
 // Sets scaling for time
@@ -2869,6 +3032,8 @@ CreatureManager.prototype.PoseCreature = function(animation_name_in, target_pts)
 
   bone_cache_manager.retrieveValuesAtTime(this.getRunTime(),
       bones_map);
+      
+  this.AlterBonesByAnchor(bones_map, animation_name_in);
       
   if(this.bones_override_callback != null)
   {
