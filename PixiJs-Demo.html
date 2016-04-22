@@ -31,6 +31,8 @@
 
 <script src="pixi.dev.js"></script>
 <script src="https://raw.githubusercontent.com/toji/gl-matrix/master/dist/gl-matrix.js"></script>
+<script src="flatbuffers.js"></script>
+<script src="CreatureFlatData_generated.js"></script>
 <script src="CreatureMeshBone.js"></script>
 <script src="CreaturePixiJSRenderer.js"></script>
 
@@ -38,7 +40,7 @@
 
     var xobj = new XMLHttpRequest();
         xobj.overrideMimeType("application/json");
-	xobj.open('GET', 'dragonTest.json', true); // Replace 'my_data' with the path to your file
+	xobj.open('GET', 'debug3Export_character_data.json', true); // Replace 'my_data' with the path to your file
 	xobj.onreadystatechange = function () {
           if (xobj.readyState == 4 && xobj.status == "200") {
             // Required use of an anonymous callback as .open will NOT return a value but simply returns undefined in asynchronous mode
@@ -50,13 +52,13 @@
 			
 			var new_creature = new Creature(actual_JSON);
 			
-			var new_animation_1 = new CreatureAnimation(actual_JSON, "default", new_creature);
-			var new_animation_2 = new CreatureAnimation(actual_JSON, "pose2", new_creature);
+			var new_animation_1 = new CreatureAnimation(actual_JSON, "idle", new_creature);
+			var new_animation_2 = new CreatureAnimation(actual_JSON, "back", new_creature);
 			
 			var new_manager = new CreatureManager(new_creature);
 			new_manager.AddAnimation(new_animation_1);
 			new_manager.AddAnimation(new_animation_2);
-			new_manager.SetActiveAnimationName("pose2", false);
+			new_manager.SetActiveAnimationName("idle", false);
 			new_manager.SetShouldLoop(true);
 			new_manager.SetIsPlaying(true);
 			new_manager.RunAtTime(0);
@@ -77,7 +79,7 @@
     		document.body.appendChild(renderer.view);
     		    		
     		// create a texture from an image path
-    		var texture = PIXI.Texture.fromImage("character-dragon.png");
+    		var texture = PIXI.Texture.fromImage("debug3Export_character_img.png");
     		
     		var creatureContainer = new PIXI.DisplayObjectContainer();
 			creatureContainer.position.x = window.innerWidth/2;
@@ -88,7 +90,7 @@
 			
 			var new_creature_renderer = new CreatureRenderer(new_manager, texture);
 			creatureContainer.addChild(new_creature_renderer);
-			creatureContainer.scale.x = -creatureContainer.scale.x;
+			creatureContainer.scale.x = creatureContainer.scale.x;
   
     		function animate() {
  
