@@ -50,10 +50,10 @@
 			var actual_JSON = JSON.parse(response);
 			//document.write("Loaded JSON file: ");
 			
-			var new_creature = new Creature(actual_JSON);
+			var new_creature = new Creature(actual_JSON, false);
 			
-			var new_animation_1 = new CreatureAnimation(actual_JSON, "idle", new_creature);
-			var new_animation_2 = new CreatureAnimation(actual_JSON, "back", new_creature);
+			var new_animation_1 = new CreatureAnimation(actual_JSON, "idle", false);
+			var new_animation_2 = new CreatureAnimation(actual_JSON, "back", false);
 			
 			var new_manager = new CreatureManager(new_creature);
 			new_manager.AddAnimation(new_animation_1);

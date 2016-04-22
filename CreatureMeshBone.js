@@ -1811,7 +1811,7 @@ var CreatureModuleUtils = {};
 CreatureModuleUtils.LoadCreatureFlatData = function(input_bytes)
 {
 	var buf = new flatbuffers.ByteBuffer(input_bytes);
-	return CreatureFlatDataJava.rootData.getRootAsrootData(buf);
+	return CreatureFlatData.rootData.getRootAsrootData(buf);
 };
 
 CreatureModuleUtils.GetAllAnimationNames = function(json_data)
@@ -2070,13 +2070,14 @@ CreatureModuleUtils.CreateBonesFlat = function(skelIn) {
   for (var i = 0; i < skelIn.bonesLength(); i++)
   {
     var cur_node = skelIn.bones(i);
+    var cur_name = cur_node.name();
 
     var cur_id = cur_node.id(); //GetJSONNodeFromKey(*cur_node, "id")->value.toNumber();
     var cur_parent_mat = CreatureModuleUtils.ReadMatrixFlat(cur_node.restParentMatArray());
 
-    var cur_local_rest_start_pt = CreatureModuleUtils.ReadVector3Flat(cur_node.localRestStartPtArray());
-    var cur_local_rest_end_pt = CreatureModuleUtils.ReadVector3Flat(cur_node.localRestEndPtArray());
-    var cur_children_ids = CreatureModuleUtils.ReadIntArrayFlat(cur_node.childrenArray());
+    var cur_local_rest_start_pt = CreatureModuleUtils.ReadFloatArray3DFlat(cur_node.localRestStartPtArray());
+    var cur_local_rest_end_pt = CreatureModuleUtils.ReadFloatArray3DFlat(cur_node.localRestEndPtArray());
+    var cur_children_ids = CreatureModuleUtils.getIntArray(cur_node.childrenArray());
 
     var new_bone = new MeshBone(cur_name,
         vec3.create(),
@@ -2089,7 +2090,7 @@ CreatureModuleUtils.CreateBonesFlat = function(skelIn) {
 
     bone_data[cur_id] = {first:new_bone, second:cur_children_ids};
 
-    for(var i = 0; i < cur_children_ids.length; i++){
+    for(var j = 0; j < cur_children_ids.length; j++){
       var cur_child_id = cur_children_ids[i];
       child_set[cur_child_id] = cur_child_id;
     }
@@ -2150,6 +2151,7 @@ CreatureModuleUtils.CreateRegionsFlat = function(meshIn, indices_in, rest_pts_in
   for (var i = 0; i < meshIn.regionsLength(); i++)
   {
   	var cur_node = meshIn.regions(i);
+  	var cur_name = cur_node.name();
 
     var cur_id = cur_node.id(); //(int)GetJSONNodeFromKey(*cur_node, "id")->value.toNumber();
     var cur_start_pt_index = cur_node.startPtIndex(); //(int)GetJSONNodeFromKey(*cur_node, "start_pt_index")->value.toNumber();
@@ -2177,7 +2179,7 @@ CreatureModuleUtils.CreateRegionsFlat = function(meshIn, indices_in, rest_pts_in
     {
       var w_node = cur_node.weights(j);
       var w_key = w_node.name();
-      var values = CreatureModuleUtils.ReadFloatArrayFlat(w_node.weightsArray());
+      var values = CreatureModuleUtils.getFloatArray(w_node.weightsArray());
       weight_map[w_key] = values;
     }
 
@@ -2295,8 +2297,8 @@ CreatureModuleUtils.FillBoneCacheFlat = function(animBonesList, start_time, end_
       var bone_node = cur_node.bones(j);
       var cur_name = bone_node.name();
 
-      var cur_start_pt = CreatureModuleUtils.ReadVector3Flat(bone_node.startPtArray()); //ReadJSONVec4_2(*bone_node, "start_pt");
-      var cur_end_pt = CreatureModuleUtils.ReadVector3Flat(bone_node.endPtArray()); //ReadJSONVec4_2(*bone_node, "end_pt");
+      var cur_start_pt = CreatureModuleUtils.ReadFloatArray3DFlat(bone_node.startPtArray()); //ReadJSONVec4_2(*bone_node, "start_pt");
+      var cur_end_pt = CreatureModuleUtils.ReadFloatArray3DFlat(bone_node.endPtArray()); //ReadJSONVec4_2(*bone_node, "end_pt");
 
       var cache_data = new MeshBoneCache(cur_name);
       cache_data.setWorldStartPt(cur_start_pt);
@@ -2380,6 +2382,7 @@ CreatureModuleUtils.FillDeformationCacheFlat = function(animMeshList, start_time
       }
 
       if(use_post_displacement == true) {
+      	var tmpNum = mesh_node.postDisplacementsLength();
         var read_pts = CreatureModuleUtils.ReadPointsArray2DFlat(mesh_node.postDisplacementsArray()); //ReadJSONPoints2DVector(*mesh_node, "post_displacements");
         cache_data.setPostDisplacements(read_pts);
       }
@@ -2568,16 +2571,17 @@ CreatureModuleUtils.FillAnchorPointMapFlat = function(anchorFlatHolder)
 };
 
 // Creature
-function Creature(load_data)
+function Creature(load_data, use_flat_data)
 {
 	this.InitDefaultData();
-    this.LoadFromData(load_data);	
-};
-
-function CreatureFlat(load_data)
-{
-	this.InitDefaultData();
-    this.LoadFromDataFlat(load_data);	
+	
+	if(use_flat_data)
+	{
+	    this.LoadFromDataFlat(load_data);			
+	}
+	else {	
+	    this.LoadFromData(load_data);	
+	}
 };
 
 Creature.prototype.InitDefaultData = function()
@@ -2808,10 +2812,10 @@ Creature.prototype.LoadFromDataFlat = function(flatRoot)
   this.global_pts = CreatureModuleUtils.ReadFloatArray3DFlat(flat_mesh.pointsArray());
   this.total_num_pts = this.global_pts.length / 3;
 
-  this.global_indices = CreatureModuleUtils.ReadIntArrayFlat(flat_mesh.indicesArray());
+  this.global_indices = CreatureModuleUtils.getIntArray(flat_mesh.indicesArray());
   this.total_num_indices = this.global_indices.length;
 
-  this.global_uvs = CreatureModuleUtils.ReadFloatArrayFlat(flat_mesh.uvsArray());
+  this.global_uvs = CreatureModuleUtils.getFloatArray(flat_mesh.uvsArray());
   
   
   this.render_colours = [];
@@ -2857,7 +2861,7 @@ Creature.prototype.LoadFromDataFlat = function(flatRoot)
   
   // Fill up uv swap packets
   var flat_uv_swap_item_holder = flatRoot.dataUvSwapItem();
-  this.uv_swap_packets = CreatureModuleUtils.FillSwapUvPacketMapFlat(flat_uv_swap_item_holder);
+  this.uv_swap_packets = CreatureModuleUtils.FillSwapUVPacketMapFlat(flat_uv_swap_item_holder);
   
   // Load Anchor Points
   var flat_anchor_holder = flatRoot.dataAnchorPoints();
@@ -2866,16 +2870,17 @@ Creature.prototype.LoadFromDataFlat = function(flatRoot)
 };
 
 // CreatureAnimation
-function CreatureAnimation(load_data, name_in)
+function CreatureAnimation(load_data, name_in, use_flat_data)
 {
 	this.initDefaultData(name_in);
-    this.LoadFromData(name_in, load_data);	
-};
-
-function CreatureAnimationFlat(load_data, name_in)
-{
-	this.initDefaultData(name_in);
-    this.LoadFromDataFlat(name_in, load_data);	
+	
+	if(use_flat_data)
+	{
+	    this.LoadFromDataFlat(name_in, load_data.dataAnimation());			
+	}
+	else {
+	    this.LoadFromData(name_in, load_data);			
+	}
 };
 
 CreatureAnimation.prototype.initDefaultData = function(name_in)
@@ -2949,7 +2954,6 @@ CreatureAnimation.prototype.LoadFromDataFlat = function(name_in, animFlat)
 
   // uv swapping animation
   CreatureModuleUtils.FillUVSwapCacheFlat(flat_clip.uvSwaps(),
-      "uv_swaps",
       this.start_time,
       this.end_time,
       this.uv_warp_cache);
