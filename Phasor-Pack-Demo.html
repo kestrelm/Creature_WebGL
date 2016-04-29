@@ -1,0 +1,67 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>hello phaser!</title>
+        <script src="phaser.js"></script>
+		<script src="msgpack.js"></script>
+		<script src="CreaturePackModule.js"></script>
+		<script src="CreaturePixiPackJSRenderer.js"></script>
+		<script src="CreaturePhaserPackRenderer.js"></script>
+    </head>
+    <body>
+
+    <script type="text/javascript">
+
+    window.onload = function() {
+
+        var game = new Phaser.Game(800, 600, Phaser.WEBGL, '', { preload: preload, create: create, update: update});
+        var texture = null;
+        var creature_pack = null;
+        
+        function preload () {
+            game.load.binary('raptorPack', 'raptor_data.creature_pack', binaryLoadCallback, this);             
+    		texture = PIXI.Texture.fromImage("raptor_img.png");
+        }
+        
+        function binaryLoadCallback(key, data) {
+    		//  Convert our binary file into a Uint8Array
+    		//  We must return the data value or nothing will be added to the cache, even if you don't modify it.
+		    return new Uint8Array(data);
+		}
+        
+        function initDebugging()
+        {
+        	bmd = game.add.bitmapData(800,600);
+            sprite = game.add.sprite(0, 0, bmd); 
+        }
+
+        function create () {
+			initDebugging();
+						
+			creature_pack = new CreaturePackLoader(game.cache.getBinary('raptorPack').buffer);
+			console.log('Loaded and created Core Creature Objects.');				
+
+			var creature_renderer = new Phaser.CreaturePackDraw(game.world, 
+													game.world.centerX, 
+													game.world.centerY,
+													creature_pack,
+													texture);
+			
+			creature_renderer.pack_renderer.setActiveAnimation("default");													
+			creature_renderer.scale.set(15.0);
+			creature_renderer.timeDelta = 1;
+			game.world.add(creature_renderer);
+        }
+        
+        function update() {
+        	// for debugging
+        	
+        }
+
+    };
+
+    </script>
+
+    </body>
+</html>
