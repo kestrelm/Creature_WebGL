@@ -6,7 +6,7 @@ For more information on how to use the runtimes, please head over to this [site]
 
 **Raptor Mark** is a demonstration of what the **Creature WebGL** plugin is capable of. 
 
-This demo shows **30 fully mesh deforming raptor characters** running across the screen. This demo is using the **CreaturePack Web** format to deliver results that have high performance, great quality and yet compact int delivery size.
+This demo shows **30 fully mesh deforming raptor characters** running across the screen. This demo is using the **CreaturePack Web** format to deliver results that have high performance, great quality and yet compact in delivery size.
 
 **UtahRaptor Artwork**: Emily Willoughby (http://emilywilloughby.com) 
 
