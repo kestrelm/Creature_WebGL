@@ -93,7 +93,6 @@ CreaturePackAnimClip.prototype.sampleTime = function(timeIn)
 	}
 
 	var curFraction = (timeIn - lowTime) / (highTime - lowTime );
-	console.log(curFraction);			
 
 	return [lowTime, highTime, curFraction];
 };
