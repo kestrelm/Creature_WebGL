@@ -40,7 +40,10 @@
 
     var xobj = new XMLHttpRequest();
         xobj.overrideMimeType("application/json");
-//	xobj.open('GET', 'debug3Export_character_data.json', true); // Replace 'my_data' with the path to your file
+	//xobj.open('GET', 'debug3Export_character_data.json', true); // Replace 'my_data' with the path to your file
+	
+	// Artwork by: Katarzyna Zalecka [http://kasia88.deviantart.com], Attribution-ShareAlike 3.0 Unported
+	// Download Asset Files here: http://www.kestrelmoon.com/creaturedocs/Animation_Samples_And_Examples/Samples_And_Videos.html
 	xobj.open('GET', 'iceDemonExport_character_data.json', true); // Replace 'my_data' with the path to your file
 	xobj.onreadystatechange = function () {
           if (xobj.readyState == 4 && xobj.status == "200") {
@@ -61,6 +64,7 @@
 			var new_manager = new CreatureManager(new_creature);
 			new_manager.AddAnimation(new_animation_1);
 			//new_manager.AddAnimation(new_animation_2);
+			//new_manager.SetActiveAnimationName("idle", false);
 			new_manager.SetActiveAnimationName("default", false);
 			new_manager.SetShouldLoop(true);
 			new_manager.SetIsPlaying(true);
