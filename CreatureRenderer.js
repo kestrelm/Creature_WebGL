@@ -49,9 +49,11 @@ function CreatureRenderer(name, scene, manager_in, texture_in)
 CreatureRenderer.prototype.UpdateData = function()
 {
 	var target_creature = this.creature_manager.target_creature;
+	var first_update = false;
 	
 	if(this.renderMesh == null)
 	{
+		first_update = true;
 		this.renderMesh = new BABYLON.Mesh(this.name, this.scene);
 		this.renderMesh.setIndices(target_creature.global_indices);
 		this.renderMesh.material = this.texture;
@@ -86,8 +88,17 @@ CreatureRenderer.prototype.UpdateData = function()
 	
 	var read_colours = target_creature.render_colours;
 	
-	this.renderMesh.setVerticesData(BABYLON.VertexBuffer.PositionKind, read_pts, true);
-	this.renderMesh.setVerticesData(BABYLON.VertexBuffer.UVKind, this.finalUVs, true);
-	this.renderMesh.setVerticesData(BABYLON.VertexBuffer.ColorKind, read_colours, true);
-	this.renderMesh.setVerticesData(BABYLON.VertexBuffer.NormalKind, this.normals, true);
+	if(first_update)
+	{
+		this.renderMesh.setVerticesData(BABYLON.VertexBuffer.PositionKind, read_pts, true);
+		this.renderMesh.setVerticesData(BABYLON.VertexBuffer.UVKind, this.finalUVs, true);
+		this.renderMesh.setVerticesData(BABYLON.VertexBuffer.ColorKind, read_colours, true);
+		this.renderMesh.setVerticesData(BABYLON.VertexBuffer.NormalKind, this.normals, true);		
+	}
+	else {
+		this.renderMesh.updateVerticesData(BABYLON.VertexBuffer.PositionKind, read_pts, true, false);
+		this.renderMesh.updateVerticesData(BABYLON.VertexBuffer.UVKind, this.finalUVs, true, false);
+		this.renderMesh.updateVerticesData(BABYLON.VertexBuffer.ColorKind, read_colours, true, false);
+		this.renderMesh.updateVerticesData(BABYLON.VertexBuffer.NormalKind, this.normals, true, false);				
+	}
 };
