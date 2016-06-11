@@ -86,8 +86,8 @@ CreatureRenderer.prototype.UpdateData = function()
 	
 	var read_colours = target_creature.render_colours;
 	
-	this.renderMesh.setVerticesData(read_pts, BABYLON.VertexBuffer.PositionKind, true);
-	this.renderMesh.setVerticesData(this.finalUVs, BABYLON.VertexBuffer.UVKind, true);
-	this.renderMesh.setVerticesData(read_colours, BABYLON.VertexBuffer.ColorKind, true);
-	this.renderMesh.setVerticesData(this.normals, BABYLON.VertexBuffer.NormalKind, true);
+	this.renderMesh.setVerticesData(BABYLON.VertexBuffer.PositionKind, read_pts, true);
+	this.renderMesh.setVerticesData(BABYLON.VertexBuffer.UVKind, this.finalUVs, true);
+	this.renderMesh.setVerticesData(BABYLON.VertexBuffer.ColorKind, read_colours, true);
+	this.renderMesh.setVerticesData(BABYLON.VertexBuffer.NormalKind, this.normals, true);
 };

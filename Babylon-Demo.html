@@ -31,9 +31,8 @@
 
 <canvas id="renderCanvas"></canvas>
 
-<script src="http://www.babylonjs.com/babylon.js"></script>
-<script src="http://www.babylonjs.com/hand.minified-1.2.js"></script>
-<script src="https://raw.githubusercontent.com/toji/gl-matrix/master/dist/gl-matrix.js"></script>
+<script src="babylon.2.3.js"></script>
+<script src="gl-matrix.js"></script>
 <script src="flatbuffers.js"></script>
 <script src="CreatureFlatData_generated.js"></script>
 <script src="CreatureMeshBone.js"></script>
@@ -43,7 +42,11 @@
 
     var xobj = new XMLHttpRequest();
         xobj.overrideMimeType("application/json");
-	xobj.open('GET', 'debug3Export_character_data.json', true); // Replace 'my_data' with the path to your file
+        
+	// Artwork by: Katarzyna Zalecka [http://kasia88.deviantart.com], Attribution-ShareAlike 3.0 Unported
+	// Download Asset Files here: http://www.kestrelmoon.com/creaturedocs/Animation_Samples_And_Examples/Samples_And_Videos.html
+	xobj.open('GET', 'iceDemonExport_character_data.json', true); // Replace 'my_data' with the path to your file
+	
 	xobj.onreadystatechange = function () {
           if (xobj.readyState == 4 && xobj.status == "200") {
             // Required use of an anonymous callback as .open will NOT return a value but simply returns undefined in asynchronous mode
@@ -55,13 +58,11 @@
 			
 			var new_creature = new Creature(actual_JSON, false);
 			
-			var new_animation_1 = new CreatureAnimation(actual_JSON, "idle", false);
-			var new_animation_2 = new CreatureAnimation(actual_JSON, "back", false);
+			var new_animation_1 = new CreatureAnimation(actual_JSON, "default", false);
 			
 			var new_manager = new CreatureManager(new_creature);
 			new_manager.AddAnimation(new_animation_1);
-			new_manager.AddAnimation(new_animation_2);
-			new_manager.SetActiveAnimationName("idle", false);
+			new_manager.SetActiveAnimationName("default", false);
 			new_manager.SetShouldLoop(true);
 			new_manager.SetIsPlaying(true);
 			new_manager.RunAtTime(0);
@@ -117,17 +118,17 @@
 
     // This creates a light, aiming 0,1,0 - to the sky.
     var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
-
+    
     // Dim the light a small amount
     light.intensity = 0;
 
 	// creature
 	var creature_texture = new BABYLON.StandardMaterial("creatureTexture", scene);
 	//creature_texture.emissiveColor = new BABYLON.Color3(1, 1, 1);
-	creature_texture.diffuseTexture = new BABYLON.Texture("debug3Export_character_img.png", scene);
+	creature_texture.diffuseTexture = new BABYLON.Texture("iceDemonExport_character_img.png", scene);
 	creature_texture.diffuseTexture.hasAlpha = true;
-	creature_texture.emissiveTexture = new BABYLON.Texture("debug3Export_character_img.png", scene);
-	//creature_texture.emissiveColor = new BABYLON.Color3(1, 1, 1);
+	creature_texture.emissiveTexture = new BABYLON.Texture("iceDemonExport_character_img.png", scene);
+	creature_texture.emissiveColor = new BABYLON.Color3(1, 1, 1);
 	creature_texture.backFaceCulling = false;
 	
     // Leave this function
