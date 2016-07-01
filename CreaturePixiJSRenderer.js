@@ -55,7 +55,11 @@ function CreatureRenderer(manager_in, texture_in)
 		this.indices[i] = target_creature.global_indices[i];
 	}
 	
-	this.colors = new PIXI.Float32Array([1,1,1,1]);
+	this.colors = new PIXI.Float32Array(target_creature.total_num_pts * 4);
+	for(var i = 0; i < this.colors.length; i++)
+	{
+		this.colors[i] = 1.0;
+	}
 
 	this.UpdateRenderData(target_creature.global_pts, target_creature.global_uvs);
 };
@@ -103,7 +107,7 @@ CreatureRenderer.prototype._initWebGL = function(renderSession)
     gl.bufferData(gl.ARRAY_BUFFER,  this.uvs, gl.DYNAMIC_DRAW);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this._colorBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, this.colors, gl.STATIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, this.colors, gl.DYNAMIC_DRAW);
  
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this._indexBuffer);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.indices, gl.STATIC_DRAW);
@@ -135,6 +139,10 @@ CreatureRenderer.prototype._renderCreature = function(renderSession)
         gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.verticies);
         gl.vertexAttribPointer(shader.aVertexPosition, 2, gl.FLOAT, false, 0, 0);
         
+    	// update colors
+    	gl.bindBuffer(gl.ARRAY_BUFFER, this._colorBuffer);
+    	gl.vertexAttribPointer(shader.colorAttribute, 4, gl.FLOAT, false, 0, 0);
+        
         // update the uvs
         gl.bindBuffer(gl.ARRAY_BUFFER, this._uvBuffer);
         gl.vertexAttribPointer(shader.aTextureCoord, 2, gl.FLOAT, false, 0, 0);
@@ -164,6 +172,11 @@ CreatureRenderer.prototype._renderCreature = function(renderSession)
         gl.bindBuffer(gl.ARRAY_BUFFER, this._vertexBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, this.verticies, gl.DYNAMIC_DRAW);
         gl.vertexAttribPointer(shader.aVertexPosition, 2, gl.FLOAT, false, 0, 0);
+
+    	// update colors
+    	gl.bindBuffer(gl.ARRAY_BUFFER, this._colorBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, this.colors, gl.DYNAMIC_DRAW);
+    	gl.vertexAttribPointer(shader.colorAttribute, 4, gl.FLOAT, false, 0, 0);
         
         // update the uvs
         gl.bindBuffer(gl.ARRAY_BUFFER, this._uvBuffer);
@@ -242,4 +255,23 @@ CreatureRenderer.prototype.UpdateRenderData = function(inputVerts, inputUVs)
 		
 		write_pt_index += 2;
 	}
+	
+	// Update colour/opacity region values
+	var render_composition =
+    	target_creature.render_composition;
+	var regions_map =
+	    render_composition.getRegionsMap();
+	for(region_name in regions_map)
+	{
+		var cur_region = regions_map[region_name];
+		var start_pt_idx = cur_region.getStartPtIndex();
+		var end_pt_idx = cur_region.getEndPtIndex();
+		var cur_opacity = cur_region.opacity * 0.01;
+				
+		for(var i = (start_pt_idx * 3); i <= (end_pt_idx * 3); i++)
+		{
+			this.colors[i] = cur_opacity;
+		}
+	}
+	 
 };

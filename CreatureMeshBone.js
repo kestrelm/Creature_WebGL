@@ -815,6 +815,7 @@ function MeshRenderRegion(indices_in, rest_pts_in, uvs_in, start_pt_index_in, en
 	this.uv_warp_local_offset = vec2.fromValues(0,0);
 	this.uv_warp_global_offset = vec2.fromValues(0,0);
 	this.uv_warp_scale = vec2.fromValues(1,1);
+	this.opacity = 100.0;
 	this.start_pt_index = start_pt_index_in;
 	this.end_pt_index = end_pt_index_in;
 	this.start_index = start_index_in;
@@ -1405,6 +1406,27 @@ MeshUVWarpCache.prototype.getEnabled = function() {
   return this.enabled;
 };
 
+// MeshOpacityCache
+function MeshOpacityCache(key_in)
+{
+  this.opacity = 100.0;
+  this.key = key_in;
+};
+
+MeshOpacityCache.prototype.setOpacity = function(value_in)
+{
+  this.opacity = value_in;
+};
+
+MeshOpacityCache.prototype.getOpacity = function()
+{
+  return this.opacity;
+};
+
+MeshOpacityCache.prototype.getKey = function() {
+  return this.key;
+};
+
 // MeshBoneCacheManager
 function MeshBoneCacheManager()
 {
@@ -1802,6 +1824,108 @@ MeshUVWarpCacheManager.prototype.makeAllReady = function()
 {
   for(var i = 0; i < this.uv_cache_data_ready.length; i++) {
     this.uv_cache_data_ready[i] = true;
+  }
+};
+
+// MeshOpacityCacheManager
+function MeshOpacityCacheManager()
+{
+  this.is_ready = false;
+  this.opacity_cache_table = null;
+  this.opacity_cache_data_ready = null;
+  this.opacity_cache_table = [];
+  this.opacity_cache_data_ready = [];	
+};
+
+MeshOpacityCacheManager.prototype.init = function(start_time_in, end_time_in)
+{
+  this.start_time = start_time_in;
+  this.end_time = end_time_in;
+
+  var num_frames = this.end_time - this.start_time + 1;
+  this.opacity_cache_table = [];
+
+  this.opacity_cache_data_ready = [];
+  for(var i = 0; i < num_frames; i++) {
+    this.opacity_cache_table.push([]);
+    this.opacity_cache_data_ready.push(false);
+  }
+
+  this.is_ready = false;
+};
+
+MeshOpacityCacheManager.prototype.getStartTime = function()
+{
+  return this.start_time;
+};
+
+MeshOpacityCacheManager.prototype.getEndime = function()
+{
+  return this.end_time;
+};
+
+MeshOpacityCacheManager.prototype.getIndexByTime = function(time_in)
+{
+  var retval = time_in - this.start_time;
+  retval = Utils.clamp(retval, 0, (this.opacity_cache_table.length) - 1);
+
+  return retval;
+};
+
+MeshOpacityCacheManager.prototype.retrieveValuesAtTime = function(time_in, regions_map)
+{
+  var base_time = this.getIndexByTime(Math.floor(time_in));
+  var end_time = this.getIndexByTime(Math.ceil(time_in));
+
+  var ratio = (time_in - Math.floor(time_in));
+
+  if(this.opacity_cache_data_ready.length == 0) {
+    return;
+  }
+
+  if((this.opacity_cache_data_ready[base_time] == false)
+      || (this.opacity_cache_data_ready[end_time] == false))
+  {
+    return;
+  }
+
+  var base_cache = this.opacity_cache_table[base_time];
+
+  for(var i = 0; i < base_cache.length; i++) {
+    var base_data = base_cache[i];
+    var cur_key = base_data.getKey();
+
+    var set_region = regions_map[cur_key];
+    set_region.opacity = base_data.getOpacity();
+  }
+};
+
+MeshOpacityCacheManager.prototype.allReady = function()
+{
+  if(this.is_ready) {
+    return true;
+  }
+  else {
+    var num_frames = this.end_time - this.start_time + 1;
+    var ready_cnt = 0;
+    for(var i = 0; i < this.opacity_cache_data_ready.length; i++) {
+      if(opacity_cache_data_ready[i]) {
+        ready_cnt++;
+      }
+    }
+
+    if(ready_cnt == num_frames) {
+      this.is_ready = true;
+    }
+  }
+
+  return this.is_ready;
+};
+
+MeshOpacityCacheManager.prototype.makeAllReady = function()
+{
+  for(var i = 0; i < this.opacity_cache_data_ready.length; i++) {
+    this.opacity_cache_data_ready[i] = true;
   }
 };
 
@@ -2474,6 +2598,64 @@ CreatureModuleUtils.FillUVSwapCacheFlat = function(animUVList, start_time, end_t
   cache_manager.makeAllReady();
 };
 
+CreatureModuleUtils.FillOpacityCache = function(json_obj, key, start_time, end_time, cache_manager)
+{
+  var base_obj = json_obj[key];
+
+  cache_manager.init(start_time, end_time);
+
+  for (var cur_time in base_obj)
+  {
+  	var cur_node = base_obj[cur_time];
+
+    var cache_list = [];
+
+    for (var cur_name in cur_node)
+    {
+      var opacity_node = cur_node[cur_name];
+
+      var cache_data = new MeshOpacityCache(cur_name);
+      cache_data.setOpacity(opacity_node["opacity"]);
+
+      cache_list.push(cache_data);
+    }
+
+    var set_index = cache_manager.getIndexByTime(cur_time);
+    cache_manager.opacity_cache_table[set_index] = cache_list;
+  }
+
+  cache_manager.makeAllReady();
+};
+
+CreatureModuleUtils.FillOpacityCacheFlat = function(animOpacityList, start_time, end_time, cache_manager)
+{
+  cache_manager.init(start_time, end_time);
+
+  for (var i = 0; i < animOpacityList.timeSamplesLength(); i++)
+  {
+  	var cur_node = animOpacityList.timeSamples(i);
+  	var cur_time = cur_node.time();
+
+    var cache_list = [];
+
+    for (var j = 0; j < cur_node.meshOpacitiesLength(); j++)
+    {
+      var opacity_node = cur_node.meshOpacities(j);
+      var cur_name = opacity_node.name();
+
+      var cache_data = new MeshOpacityCache(cur_name);
+      cache_data.setOpacity(opacity_node.opacity());
+
+      cache_list.push(cache_data);
+    }
+
+    var set_index = cache_manager.getIndexByTime(cur_time);
+    cache_manager.opacity_cache_table[set_index] = cache_list;
+  }
+
+  cache_manager.makeAllReady();
+};
+
 function CreatureUVSwapPacket (local_offset_in, global_offset_in, scale_in, tag_in)
 {
 	this.local_offset = local_offset_in;
@@ -2889,6 +3071,7 @@ CreatureAnimation.prototype.initDefaultData = function(name_in)
     this.bones_cache = new MeshBoneCacheManager();
     this.displacement_cache = new MeshDisplacementCacheManager();
     this.uv_warp_cache = new MeshUVWarpCacheManager();
+    this.opacity_cache = new MeshOpacityCacheManager();
     this.cache_pts = [];
     this.fill_cache_pts = [];
 };
@@ -2922,6 +3105,13 @@ CreatureAnimation.prototype.LoadFromData = function(name_in, load_data)
       this.start_time,
       this.end_time,
       this.uv_warp_cache);
+      
+  // opacity animation
+  CreatureModuleUtils.FillOpacityCache(json_clip,
+      "mesh_opacities",
+      this.start_time,
+      this.end_time,
+      this.opacity_cache);  
 };
 
 CreatureAnimation.prototype.LoadFromDataFlat = function(name_in, animFlat)
@@ -2957,6 +3147,12 @@ CreatureAnimation.prototype.LoadFromDataFlat = function(name_in, animFlat)
       this.start_time,
       this.end_time,
       this.uv_warp_cache);
+      
+  // opacity animation
+  CreatureModuleUtils.FillOpacityCacheFlat(flat_clip.meshOpacities(),
+      this.start_time,
+      this.end_time,
+      this.opacity_cache);
 };
 
 CreatureAnimation.prototype.getIndexByTime = function(time_in)
@@ -3482,6 +3678,7 @@ CreatureManager.prototype.PoseCreature = function(animation_name_in, target_pts)
   var bone_cache_manager = cur_animation.bones_cache;
   var displacement_cache_manager = cur_animation.displacement_cache;
   var uv_warp_cache_manager = cur_animation.uv_warp_cache;
+  var opacity_cache_manager = cur_animation.opacity_cache;
 
   var render_composition =
     this.target_creature.render_composition;
@@ -3506,7 +3703,8 @@ CreatureManager.prototype.PoseCreature = function(animation_name_in, target_pts)
       regions_map);
   uv_warp_cache_manager.retrieveValuesAtTime(this.getRunTime(),
       regions_map);
-
+  opacity_cache_manager.retrieveValuesAtTime(this.getRunTime(),
+			                                 regions_map);
 
   // Do posing, decide if we are blending or not
   var cur_regions =
