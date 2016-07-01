@@ -139,9 +139,9 @@ CreatureRenderer.prototype._renderCreature = function(renderSession)
         gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.verticies);
         gl.vertexAttribPointer(shader.aVertexPosition, 2, gl.FLOAT, false, 0, 0);
         
-    	// update colors
-    	gl.bindBuffer(gl.ARRAY_BUFFER, this._colorBuffer);
-    	gl.vertexAttribPointer(shader.colorAttribute, 4, gl.FLOAT, false, 0, 0);
+    	// update colors, Phaser or Pixi does not support this yet
+    	//gl.bindBuffer(gl.ARRAY_BUFFER, this._colorBuffer);
+    	//gl.vertexAttribPointer(shader.colorAttribute, 4, gl.FLOAT, false, 0, 0);
         
         // update the uvs
         gl.bindBuffer(gl.ARRAY_BUFFER, this._uvBuffer);
@@ -173,10 +173,10 @@ CreatureRenderer.prototype._renderCreature = function(renderSession)
         gl.bufferData(gl.ARRAY_BUFFER, this.verticies, gl.DYNAMIC_DRAW);
         gl.vertexAttribPointer(shader.aVertexPosition, 2, gl.FLOAT, false, 0, 0);
 
-    	// update colors
-    	gl.bindBuffer(gl.ARRAY_BUFFER, this._colorBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, this.colors, gl.DYNAMIC_DRAW);
-    	gl.vertexAttribPointer(shader.colorAttribute, 4, gl.FLOAT, false, 0, 0);
+    	// update colors, Phaser or Pixi does not support this yet
+    	//gl.bindBuffer(gl.ARRAY_BUFFER, this._colorBuffer);
+        //gl.bufferData(gl.ARRAY_BUFFER, this.colors, gl.DYNAMIC_DRAW);
+    	//gl.vertexAttribPointer(shader.colorAttribute, 4, gl.FLOAT, false, 0, 0);
         
         // update the uvs
         gl.bindBuffer(gl.ARRAY_BUFFER, this._uvBuffer);
