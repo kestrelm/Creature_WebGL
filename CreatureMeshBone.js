@@ -3240,7 +3240,7 @@ CreatureManager.prototype.CreateAllAnimations = function(load_data)
     this.CreateAnimation(load_data, cur_name);
   }
 
-  this.SetActiveAnimationName (all_animation_names.get(0));
+  this.SetActiveAnimationName (all_animation_names[0]);
 };
 
 // Add an animation
