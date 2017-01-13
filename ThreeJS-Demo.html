@@ -25,8 +25,8 @@
 
 <p>My first paragraph.</p>
 
-<script src="http://threejs.org/build/three.min.js"></script>
-<script src="https://raw.githubusercontent.com/toji/gl-matrix/master/dist/gl-matrix.js"></script>
+<script src="http://threejs.org/build/three.js"></script>
+<script src="gl-matrix.js"></script>
 <script src="flatbuffers.js"></script>
 <script src="CreatureFlatData_generated.js"></script>
 <script src="CreatureMeshBone.js"></script>
@@ -84,13 +84,13 @@
 
 			
 				//var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-				var texture = new THREE.ImageUtils.loadTexture("debug3Export_character_img.png");
+				var texture = new THREE.TextureLoader().load("debug3Export_character_img.png");
 				var material = new THREE.MeshBasicMaterial({
 	        		map: texture,
 	        		transparent: true,
         			side:THREE.DoubleSide
       			});
-      		
+      			      		
 						
   				// Create creature renderer
 				new_creature_renderer = new CreatureRenderer("CreatureRenderer",
