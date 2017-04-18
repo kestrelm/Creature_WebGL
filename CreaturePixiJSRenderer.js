@@ -220,6 +220,21 @@ CreatureRenderer.prototype.UpdateCreatureBounds = function()
 	this.worldTransform.apply(this.creatureBoundsMax, this.creatureBoundsMax);				
 };
 
+CreatureRenderer.prototype.GetPixelScaling = function(desired_x, desired_y)
+{
+	// compute pixel scaling relative to mesh scaling
+	var target_creature = this.creature_manager.target_creature;		
+	target_creature.ComputeBoundaryMinMax();
+
+    var mesh_size_x = target_creature.boundary_max[0] - target_creature.boundary_min[0];
+    var mesh_size_y = target_creature.boundary_max[1] - target_creature.boundary_min[1];
+
+    var scale_x = 1.0 / mesh_size_x * desired_x;
+    var scale_y = 1.0 / mesh_size_y * desired_y;
+
+    return [scale_x, scale_y];
+};
+
 CreatureRenderer.prototype.UpdateData = function()
 {
 	var target_creature = this.creature_manager.target_creature;
