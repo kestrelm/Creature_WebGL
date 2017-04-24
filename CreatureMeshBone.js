@@ -3599,15 +3599,15 @@ CreatureManager.prototype.AlterBonesByAnchor = function(bones_map, animation_nam
 		return;
 	}
 	
-	var anchor_point = this.target_creature.GetAnchor(animation_name_in);
+	var anchor_point = this.target_creature.GetAnchorPoint(animation_name_in);
 	for(var cur_bone_key in bones_map)
 	{
 		var cur_bone = bones_map[cur_bone_key];
 		var start_pt = cur_bone.getWorldStartPt();
 		var end_pt = cur_bone.getWorldEndPt();
 		
-		start_pt = start_pt - vec3.fromValues(anchor_point[0], anchor_point[1], 0);
-		end_pt = end_pt - vec3.fromValues(anchor_point[0], anchor_point[1], 0);
+		start_pt = vec3.subtract(start_pt, start_pt, vec3.fromValues(anchor_point[0], anchor_point[1], 0));
+		end_pt = vec3.subtract(end_pt, end_pt, vec3.fromValues(anchor_point[0], anchor_point[1], 0));
 		
 		cur_bone.setWorldStartPt(start_pt);
 		cur_bone.setWorldEndPt(end_pt);
