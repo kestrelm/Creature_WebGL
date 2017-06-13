@@ -1664,7 +1664,7 @@ MeshDisplacementCacheManager.prototype.retrieveValuesAtTime = function(time_in, 
       }
       else {
         for(var j = 0; j < displacements.length; j++) {
-          displacements.set[j] = vec2.create();
+          displacements[j] = vec2.create();
         }
       }
     }
@@ -3221,6 +3221,15 @@ function CreatureManager(target_creature_in)
     this.active_blend_animation_names = [];
     this.active_blend_animation_names.push("");
     this.active_blend_animation_names.push("");	
+    
+    this.do_auto_blending = false;
+    this.auto_blend_delta = 0.0;
+    
+    this.auto_blend_names = [];
+    this.auto_blend_names.push("");
+    this.auto_blend_names.push("");
+    
+    this.active_blend_run_times = {};
 };
 
 // Create an animation
@@ -3354,7 +3363,7 @@ CreatureManager.prototype.MakePointCache = function(animation_name_in)
             var new_pts = [];
             for (var j = 0; j < this.target_creature.total_num_pts * 3; j++) new_pts[j] = 0; 
             //auto new_pts = new glm::float32[target_creature->GetTotalNumPoints() * 3];
-            this.PoseCreature(animation_name_in, new_pts);
+            this.PoseCreature(animation_name_in, new_pts, this.getRunTime());
             
             cache_pts_list.push(new_pts);
         }
@@ -3374,7 +3383,7 @@ CreatureManager.prototype.FillSinglePointCacheFrame = function(animation_name_in
 	this.setRunTime(time_in);
     var new_pts = [];
     for (var j = 0; j < this.target_creature.total_num_pts * 3; j++) new_pts[j] = 0; 
-    this.PoseCreature(animation_name_in, new_pts);
+    this.PoseCreature(animation_name_in, new_pts, time_in);
     
     cur_animation.fill_cache_pts.push(new_pts);
     cur_animation.verifyFillCache();
@@ -3413,6 +3422,68 @@ CreatureManager.prototype.SetIsPlaying = function(flag_in)
 {
   this.is_playing = flag_in;
 };
+
+CreatureManager.prototype.ProcessAutoBlending = function()
+{
+	// process blending factor
+	this.blending_factor += this.auto_blend_delta;
+	if(this.blending_factor > 1)
+	{
+		this.blending_factor = 1;
+	}
+};
+
+CreatureManager.prototype.IncreAutoBlendRunTimes = function(delta_in)
+{
+	set_animation_name = "";
+	for(var j = 0; j < this.auto_blend_names.length; j++)
+	{
+		var cur_animation_name = this.auto_blend_names[j];				
+		if ((cur_animation_name in this.animations) 
+				&& (set_animation_name != cur_animation_name))
+		{
+			cur_run_time = this.active_blend_run_times[cur_animation_name];
+			cur_run_time += delta_in;
+			cur_run_time = this.correctRunTime(cur_run_time, cur_animation_name);
+
+			this.active_blend_run_times[cur_animation_name] = cur_run_time;
+					
+			set_animation_name = cur_animation_name;
+		}
+	}
+};
+
+CreatureManager.prototype.correctRunTime = function(time_in, animation_name)
+{
+	ret_time = time_in;
+	cur_animation = this.animations[animation_name];
+	anim_start_time = cur_animation.start_time;
+	anim_end_time = cur_animation.end_time;
+			
+	if (ret_time > anim_end_time)
+	{
+		if (this.should_loop)
+		{
+			ret_time = anim_start_time;
+		}
+		else {
+			ret_time = anim_end_time;
+		}
+	}
+	else if (ret_time < anim_start_time)
+	{
+		if (this.should_loop)
+		{
+			ret_time = anim_end_time;
+		}
+		else {
+			ret_time = anim_start_time;
+		}
+	}
+			
+	return ret_time;
+};
+
 
 // Resets animation to start time
 CreatureManager.prototype.ResetToStartTimes = function()
@@ -3484,6 +3555,11 @@ CreatureManager.prototype.Update = function(delta)
   }
 
   this.increRunTime(delta * this.time_scale);
+  
+  if(this.do_auto_blending) {
+  	this.ProcessAutoBlending();
+  	this.IncreAutoBlendRunTimes(delta * this.time_scale);
+  }
 
   this.RunCreature ();
 };
@@ -3504,13 +3580,15 @@ CreatureManager.prototype.RunCreature = function()
   if(this.do_blending)
   {
     for(var i = 0; i < 2; i++) {
+      cur_animation_name = this.active_blend_animation_names[i];
       var cur_animation = this.animations[this.active_blend_animation_names[i]];
+      cur_animation_run_time = this.active_blend_run_times[cur_animation_name];
       if(cur_animation.cache_pts.length > 0)
       {
-      	cur_animation.poseFromCachePts(this.getRunTime(), this.blend_render_pts[i], this.target_creature.total_num_pts);
+      	cur_animation.poseFromCachePts(cur_animation_run_time, this.blend_render_pts[i], this.target_creature.total_num_pts);
       }
       else {
-	  	this.PoseCreature(this.active_blend_animation_names[i], this.blend_render_pts[i]);
+	  	this.PoseCreature(this.active_blend_animation_names[i], this.blend_render_pts[i], cur_animation_run_time);
 	  }
     }
 
@@ -3524,9 +3602,9 @@ CreatureManager.prototype.RunCreature = function()
          ((1.0f - blending_factor) * (read_data_1)) +
          (blending_factor * (read_data_2));
        */
-      this.target_creature.render_pts.set(set_data_index,
-          ((1.0 - blending_factor) * (read_data_1)) +
-          (blending_factor * (read_data_2)));
+      this.target_creature.render_pts[set_data_index] =
+          ((1.0 - this.blending_factor) * (read_data_1)) +
+          (this.blending_factor * (read_data_2));
 
     }
   }
@@ -3538,7 +3616,7 @@ CreatureManager.prototype.RunCreature = function()
     	// cur_animation->poseFromCachePts(getRunTime(), target_creature->GetRenderPts(), target_creature->GetTotalNumPoints());
     }
     else {
-		this.PoseCreature(this.active_animation_name, this.target_creature.render_pts);
+		this.PoseCreature(this.active_animation_name, this.target_creature.render_pts, this.getRunTime());
 	}
   }
   
@@ -3628,12 +3706,12 @@ CreatureManager.prototype.SetBlending = function(flag_in)
   if (this.do_blending) {
     if (this.blend_render_pts[0].length == 0) {
       var new_vec = [];
-      for(var i = 0; i < target_creature.total_num_pts * 3; i++)
+      for(var i = 0; i < this.target_creature.total_num_pts * 3; i++)
       {
         new_vec.push(0);
       }
 
-      this.blend_render_pts.set(0, new_vec);
+      this.blend_render_pts.push(new_vec);
     }
 
     if (this.blend_render_pts[1].length == 0) {
@@ -3647,6 +3725,45 @@ CreatureManager.prototype.SetBlending = function(flag_in)
     }
 
   }
+};
+
+// Sets auto blending
+CreatureManager.prototype.SetAutoBlending = function(flag_in)
+{
+	this.do_auto_blending = flag_in;
+	this.SetBlending(flag_in);
+			
+	if(this.do_auto_blending)
+	{
+		this.AutoBlendTo(this.active_animation_name, 0.1);
+	}	
+};
+
+// Use auto blending to blend to the next animation
+CreatureManager.prototype.AutoBlendTo = function(animation_name_in, blend_delta)
+{
+	if(animation_name_in == this.auto_blend_names[1])
+	{
+		// already blending to that so just return
+		return;
+	}
+			
+	this.ResetBlendTime(animation_name_in);
+			
+	this.auto_blend_delta = blend_delta;
+	this.auto_blend_names[0] = this.active_animation_name;
+	this.auto_blend_names[1] = animation_name_in;
+	this.blending_factor = 0;
+			
+	this.active_animation_name = animation_name_in;
+			
+	this.SetBlendingAnimations(this.auto_blend_names[0], this.auto_blend_names[1]);
+};
+
+CreatureManager.prototype.ResetBlendTime = function(name_in)
+{
+	cur_animation = this.animations[name_in];
+	this.active_blend_run_times[name_in] = cur_animation.start_time;
 };
 
 // Sets blending animation names
@@ -3671,7 +3788,7 @@ CreatureManager.prototype.IsContactBone = function(pt_in, radius)
 };
 
 
-CreatureManager.prototype.PoseCreature = function(animation_name_in, target_pts)
+CreatureManager.prototype.PoseCreature = function(animation_name_in, target_pts, input_run_time)
 {
   var cur_animation = this.animations[animation_name_in];
 
@@ -3689,7 +3806,7 @@ CreatureManager.prototype.PoseCreature = function(animation_name_in, target_pts)
   var regions_map =
     render_composition.getRegionsMap();
 
-  bone_cache_manager.retrieveValuesAtTime(this.getRunTime(),
+  bone_cache_manager.retrieveValuesAtTime(input_run_time,
       bones_map);
       
   this.AlterBonesByAnchor(bones_map, animation_name_in);
@@ -3699,11 +3816,11 @@ CreatureManager.prototype.PoseCreature = function(animation_name_in, target_pts)
   	this.bones_override_callback(bones_map);
   }
 
-  displacement_cache_manager.retrieveValuesAtTime(this.getRunTime(),
+  displacement_cache_manager.retrieveValuesAtTime(input_run_time,
       regions_map);
-  uv_warp_cache_manager.retrieveValuesAtTime(this.getRunTime(),
+  uv_warp_cache_manager.retrieveValuesAtTime(input_run_time,
       regions_map);
-  opacity_cache_manager.retrieveValuesAtTime(this.getRunTime(),
+  opacity_cache_manager.retrieveValuesAtTime(input_run_time,
 			                                 regions_map);
 
   // Do posing, decide if we are blending or not
