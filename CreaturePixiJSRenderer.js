@@ -46,16 +46,16 @@ function CreatureRenderer(manager_in, texture_in)
 	
 	var target_creature = this.creature_manager.target_creature;
 
-	this.verticies = new PIXI.Float32Array(target_creature.total_num_pts * 2);
-	this.uvs = new PIXI.Float32Array(target_creature.total_num_pts * 2);
+	this.verticies = new Float32Array(target_creature.total_num_pts * 2);
+	this.uvs = new Float32Array(target_creature.total_num_pts * 2);
 	
-	this.indices = new PIXI.Uint16Array(target_creature.global_indices.length);
+	this.indices = new Uint16Array(target_creature.global_indices.length);
 	for(var i = 0; i < this.indices.length; i++)
 	{
 		this.indices[i] = target_creature.global_indices[i];
 	}
 	
-	this.colors = new PIXI.Float32Array(target_creature.total_num_pts * 4);
+	this.colors = new Float32Array(target_creature.total_num_pts * 4);
 	for(var i = 0; i < this.colors.length; i++)
 	{
 		this.colors[i] = 1.0;
@@ -220,7 +220,7 @@ CreatureRenderer.prototype.UpdateCreatureBounds = function()
 	this.worldTransform.apply(this.creatureBoundsMax, this.creatureBoundsMax);				
 };
 
-CreatureRenderer.prototype.SetAnchorPoint = function(x, y, anim_clip_name_in = 'default') {
+CreatureRenderer.prototype.SetAnchorPoint = function(x, y, anim_clip_name_in) {
     var target_creature = this.creature_manager.target_creature;
     target_creature.ComputeBoundaryMinMax();
 

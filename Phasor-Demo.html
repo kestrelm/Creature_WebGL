@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <title>hello phaser!</title>
-        <script src="phaser.js"></script>
+        <script src="phaser-2.js"></script>
         <script src="gl-matrix.js"></script>
 		<script src="flatbuffers.js"></script>
 		<script src="CreatureFlatData_generated.js"></script>
@@ -30,18 +30,12 @@
         var creaturePhasorObject2 = null;
 
         function preload () {
-
-            //game.load.image('logo', 'phaser.png');
             game.load.text('iceJSON', 'iceAnchorExport_character_data.json');
             //game.load.binary('succBin', 'succ_data.bytes', binaryLoadCallback, this);
-            //game.load.binary('succBin', 'opacityExport_character_data.bytes', binaryLoadCallback, this);
              
-            // create a texture from an image path
-            
-    		texture = PIXI.Texture.fromImage("iceDemonExport_character_img.png");
-    		//texture = PIXI.Texture.fromImage("debug3Export_character_img.png");
-    		//texture = PIXI.Texture.fromImage("opacityExport_character_img.png");
-			
+            // create a texture from an image path            
+			//game.load.image('succTexture', 'debug3Export_character_img.png');
+			game.load.image('iceDemonTexture', 'iceDemonExport_character_img.png');
         }
         
         function binaryLoadCallback(key, data) {
@@ -57,9 +51,10 @@
         }
 
         function create () {
+        	// Grab actual texture for rendering
+        	texture = new PIXI.Texture(game.cache.getBaseTexture('iceDemonTexture'));
+
 			initDebugging();
-            //var logo = game.add.sprite(game.world.centerX, game.world.centerY, 'logo');
-            //logo.anchor.setTo(0.5, 0.5);
             
             // Core Creature Objects
 			var actual_data = JSON.parse(game.cache.getText('iceJSON'));
@@ -103,8 +98,7 @@
 						
 			console.log('Loaded and created Core Creature Objects.');
 			
-			// Phasor Creature Object
-			
+			// Phasor Creature Object			
 			creaturePhasorObject = new Phaser.CreatureDraw(game.world, 
 													game.world.centerX, 
 													game.world.centerY,
