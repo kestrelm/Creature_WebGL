@@ -220,34 +220,60 @@ CreatureRenderer.prototype.UpdateCreatureBounds = function()
 	this.worldTransform.apply(this.creatureBoundsMax, this.creatureBoundsMax);				
 };
 
-CreatureRenderer.prototype.SetAnchorPoint = function(x, y, anim_clip_name_in = 'default') {
-    var target_creature = this.creature_manager.target_creature;
-    target_creature.ComputeBoundaryMinMax();
+CreatureRenderer.prototype.SetAnchorPoint = function(x, y, anim_clip_name_in) {
+  if (!anim_clip_name_in) {
+    anim_clip_name_in = 'default';
+  }
 
-    var mesh_size_x = target_creature.boundary_max[0] - target_creature.boundary_min[0];
-    var mesh_size_y = target_creature.boundary_max[1] - target_creature.boundary_min[1];
+  this.ComputeBoundaryMinMax();
 
-    var target_size_x = target_creature.boundary_max[0];
-    var target_size_y = target_creature.boundary_max[1];
+  var mesh_size_x = this.boundary_max[0] - this.boundary_min[0];
+  var mesh_size_y = this.boundary_max[1] - this.boundary_min[1];
 
-    if (x !== 0) {
-        target_size_x = target_creature.boundary_max[0] - (mesh_size_x * (x));
+  var target_size_x = this.boundary_max[0];
+  var target_size_y = this.boundary_max[1];
+
+
+  if (x >= 0 && x !== null) {
+    target_size_x = (this.boundary_max[0] - (mesh_size_x * (x)));
+  }
+  else if (x < 0) {
+    target_size_x = -Math.abs(this.boundary_max[0] - (mesh_size_x * (Math.abs(x))));
+  }
+  else if (x === null) {
+    if (this.anchor_point_map && this.anchor_point_map[anim_clip_name_in]) {
+        target_size_x = this.anchor_point_map[anim_clip_name_in][0];
     }
-
-    if (y !== 0) {
-        target_size_y = target_creature.boundary_max[1] - (mesh_size_y * (y));
+    else {
+        target_size_x = 0;
     }
+  }
 
-    var anchor_point_base = {
-        AnchorPoints: [
-          {
-            point: [target_size_x, target_size_y],
-            anim_clip_name: anim_clip_name_in
-          }
-        ]
-    };
+  if (y >= 0 && y !== null) {
+    target_size_y = (this.boundary_max[1] - (mesh_size_y * (y)));
+  }
+  else if (y < 0) {
+    target_size_y = -Math.abs(this.boundary_max[1] - (mesh_size_y * (Math.abs(y))));
+  }
+  else if (y === null) {
+    if (this.anchor_point_map && this.anchor_point_map[anim_clip_name_in]) {
+        target_size_y = this.anchor_point_map[anim_clip_name_in][1];
+    }
+    else {
+        target_size_y = 0;
+    }
+  }
 
-    target_creature.anchor_point_map = target_creature.FillAnchorPointMap(anchor_point_base);
+  var anchor_point_base = {
+    AnchorPoints: [
+      {
+        point: [target_size_x, target_size_y],
+        anim_clip_name: anim_clip_name_in
+      }
+    ]
+  };
+
+  this.anchor_point_map = this.FillAnchorPointMap(anchor_point_base);
 };
 
 CreatureRenderer.prototype.GetPixelScaling = function(desired_x, desired_y)
