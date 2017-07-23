@@ -9,7 +9,7 @@ Download the samples and more **[here](http://www.kestrelmoon.com/creaturedocs/A
 ![Alt text](https://github.com/kestrelm/Creature_WebGL/blob/master/babylonjs.png)
 Live Babylon JS Demo is **[here](http://creature.kestrelmoon.com/WebDemo/Babylon-Demo.html)**.
 
-##Live Raptor Mark Demo
+## Live Raptor Mark Demo
 
 **Raptor Mark** is a demonstration of what the **Creature WebGL** plugin is capable of. 
 
