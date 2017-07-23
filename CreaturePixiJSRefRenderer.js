@@ -111,6 +111,28 @@ CreatureRenderer.prototype.refresh = function()
 	this.dirty = true;
 };
 
+CreatureRenderer.prototype.EnableSkinSwap = function(swap_name_in, active)
+{
+	var target_creature = this.creature_manager.target_creature;
+	target_creature.EnableSkinSwap(swap_name_in, active);
+	this.indices = new Uint16Array(target_creature.final_skin_swap_indices.length);
+	for(var i = 0; i < this.indices.length; i++)
+	{
+		this.indices[i] = target_creature.final_skin_swap_indices[i];
+	}		
+};
+
+CreatureRenderer.prototype.DisableSkinSwap = function()
+{
+	var target_creature = this.creature_manager.target_creature;
+	target_creature.DisableSkinSwap();
+	this.indices = new Uint16Array(target_creature.global_indices.length);
+	for(var i = 0; i < this.indices.length; i++)
+	{
+		this.indices[i] = target_creature.global_indices[i];
+	}		
+};
+
 CreatureRenderer.prototype.UpdateRenderData = function(inputVerts, inputUVs)
 {
 	var target_creature = this.creature_manager.target_creature;

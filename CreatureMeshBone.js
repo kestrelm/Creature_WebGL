@@ -1938,6 +1938,30 @@ CreatureModuleUtils.LoadCreatureFlatData = function(input_bytes)
 	return CreatureFlatData.rootData.getRootAsrootData(buf);
 };
 
+CreatureModuleUtils.BuildCreatureMetaData = function(json_data)
+{
+  var meta_data = new CreatureMetaData();
+  if("skinSwapList" in json_data)
+  {
+    var skin_swap_obj = json_data["skinSwapList"];
+    for(var swap_name in skin_swap_obj)
+    {
+      var swap_data = skin_swap_obj[swap_name]["swap"];
+      var swap_items = swap_data["swap_items"];
+      var swap_set = {};
+      for(var i = 0; i < swap_items.length; i++)
+      {
+        var cur_item = swap_items[i];
+        swap_set[cur_item] = cur_item;
+      }
+
+      meta_data.skin_swaps[swap_name] = swap_set;
+    }
+  }
+
+  return meta_data;
+};
+
 CreatureModuleUtils.GetAllAnimationNames = function(json_data)
 {
   var json_animations = json_data["animation"];
@@ -2768,7 +2792,7 @@ function Creature(load_data, use_flat_data)
 
 Creature.prototype.InitDefaultData = function()
 {
-	this.total_num_pts = 0;
+	  this.total_num_pts = 0;
     this.total_num_indices = 0;
     this.global_indices = null;
     this.global_pts = null;
@@ -2783,6 +2807,42 @@ Creature.prototype.InitDefaultData = function()
     this.active_uv_swap_actions = {};
     this.anchor_point_map = {};
     this.anchor_points_active = false;
+    this.skin_swap_active = false;
+    this.skin_swap_name = "";
+    this.final_skin_swap_indices = null;
+    this.creature_meta_data = null;
+};
+
+Creature.prototype.SetMetaData = function(creature_meta_data)
+{
+  this.creature_meta_data = creature_meta_data;
+};
+
+Creature.prototype.EnableSkinSwap = function(swap_name_in, active)
+{
+  this.skin_swap_active = active;
+  if(!this.skin_swap_active)
+  {
+    this.skin_swap_name = "";
+    this.final_skin_swap_indices = null;
+  }
+  else
+  {
+    this.skin_swap_name = swap_name_in;
+    this.final_skin_swap_indices = this.creature_meta_data.buildSkinSwapIndices(
+      this.skin_swap_name, 
+      this.render_composition);    
+  }
+};
+
+Creature.prototype.DisableSkinSwap = function()
+{
+  this.EnableSkinSwap("", false);
+};
+
+Creature.prototype.ShouldSkinSwap = function()
+{
+  return this.creature_meta_data && this.skin_swap_active && this.final_skin_swap_indices;
 };
 
 Creature.prototype.SetActiveItemSwap = function(region_name, swap_idx)
@@ -3196,6 +3256,57 @@ CreatureAnimation.prototype.poseFromCachePts = function(time_in, target_pts, num
             floor_idx += 3;
             ceil_idx += 3;
         }
+};
+
+// CreatureMetaData
+function CreatureMetaData()
+{
+  this.skin_swaps = {};
+};
+
+CreatureMetaData.prototype.clear = function()
+{
+  this.skin_swaps = {};
+};
+
+CreatureMetaData.prototype.buildSkinSwapIndices = function(swap_name, bone_composition)
+{
+  var skin_swap_indices = null;
+  if(!(swap_name in this.skin_swaps))
+  {
+    skin_swap_indices = [];
+    return skin_swap_indices;
+  }
+
+  var swap_set = this.skin_swaps[swap_name];
+  var total_size = 0;
+  var regions_map = bone_composition.getRegionsMap();
+  for(var region_name in regions_map)
+  {
+    if(region_name in swap_set)
+    {
+      var cur_region = regions_map[region_name];
+      total_size += cur_region.getNumIndices();
+    }
+  }
+
+  skin_swap_indices = [];
+  var offset = 0;
+  for(var region_name in regions_map)
+  {
+    if(region_name in swap_set)
+    {
+      var cur_region = regions_map[region_name];
+      for(var j = 0; j < cur_region.getNumIndices(); j++)
+      {
+        skin_swap_indices.push(cur_region.getLocalIndex(j));
+      }
+
+      offset += cur_region.getNumIndices();
+    }
+  }
+
+  return skin_swap_indices;
 };
 
 // CreatureManager
