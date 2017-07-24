@@ -3,6 +3,8 @@
 This document is about the [Creature](http://creature.kestrelmoon.com) runtime for [Construct 2](https://www.scirra.com/construct2). Please check out the sample demo in the 
 **demo** directory for more information.
 
+![alt text](https://raw.githubusercontent.com/kestrelm/Creature_WebGL/master/Construct2/pic2.png "Image2")
+
 ### Requirements
 
 1. Exported Creature JSON
@@ -11,6 +13,7 @@ This document is about the [Creature](http://creature.kestrelmoon.com) runtime f
 
 3. Exported Creature character PNG Image Texture Atlas
 
+![alt text](https://raw.githubusercontent.com/kestrelm/Creature_WebGL/master/Construct2/pic1.png "Image1")
 
 ### Loading in the JSON
 
