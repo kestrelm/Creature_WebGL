@@ -5,6 +5,8 @@ This document is about the [Creature](http://creature.kestrelmoon.com) runtime f
 
 ![alt text](https://raw.githubusercontent.com/kestrelm/Creature_WebGL/master/Construct2/pic2.png "Image2")
 
+Watch the Demo video [here](https://youtu.be/btMsOebcwrA).
+
 ### Requirements
 
 1. Exported Creature JSON
