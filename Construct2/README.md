@@ -7,6 +7,14 @@ This document is about the [Creature](http://creature.kestrelmoon.com) runtime f
 
 Watch the Demo video [here](https://youtu.be/btMsOebcwrA).
 
+### Installation
+
+1. Close Construct 2
+
+2. Copy the plugin's folder ( **creature2d** ) to **<install path>\exporters\html5\plugins**. You'll see each plugin has its own folder here, so to add a new plugin create a new folder ( **creature2d** ) and add the plugin's files inside it. 
+
+3. Launch Construct 2 and the plugin or behavior should be available from the editor.
+
 ### Requirements
 
 1. Exported Creature JSON
