@@ -325,6 +325,22 @@ Utils.vec2Interp = function(vec_1, vec_2, ratio)
 	return retVec;
 };
 
+Utils.ptsInterp = function(src_pts, target_pts, fraction)
+{
+    var ret_pts = [];
+    for (var i = 0; i < src_pts.length; i++)
+    {
+        ret_pts.push(Utils.vec2Interp(src_pts[i], target_pts[i], fraction));
+    }
+
+    return ret_pts;
+};
+
+Utils.scalarInterp = function(src_val, target_val, fraction)
+{
+    return ((1.0 - fraction) * src_val) + (fraction * target_val);
+};
+
 // MeshBone
 function MeshBone(key_in, start_pt_in, end_pt_in, parent_transform)
 {
@@ -2396,12 +2412,42 @@ CreatureModuleUtils.GetStartEndTimesFlat = function(animBonesList)
   return {first:start_time, second:end_time};
 };
 
+CreatureModuleUtils.FillBoneGapCache = function(prev_time, cur_time, set_index, cache_manager, cache_list)
+{
+	var gap_diff = cur_time - prev_time;
+	if (gap_diff > 1)
+	{
+		// Gap Step
+		var prev_index = cache_manager.getIndexByTime(prev_time);
+		for (var j = 1; j < gap_diff; j++)
+		{
+			var gap_fraction = j / gap_diff;
+			var gap_cache_list = [];
+			for (var k = 0; k < cache_list.length; k++)
+			{
+				var cur_data = cache_manager.bone_cache_table[set_index][k];
+				var prev_data = cache_manager.bone_cache_table[prev_index][k];
+				var gap_cache_data = new MeshBoneCache(cur_data.getKey());
+				gap_cache_data.setWorldStartPt(
+					Utils.vecInterp(prev_data.getWorldStartPt(), cur_data.getWorldStartPt(), gap_fraction));
+				gap_cache_data.setWorldEndPt(
+					Utils.vecInterp(prev_data.getWorldEndPt(), cur_data.getWorldEndPt(), gap_fraction));
+
+				gap_cache_list.push(gap_cache_data);
+			}
+
+			cache_manager.bone_cache_table[prev_index + j] = gap_cache_list;
+		}
+	}	
+};
+
 CreatureModuleUtils.FillBoneCache = function(json_obj, key, start_time, end_time, cache_manager)
 {
   var base_obj = json_obj[key];
 
   cache_manager.init(start_time, end_time);
 
+  var prev_time = start_time;
   for (var cur_time in base_obj)
   {
   	var cur_node = base_obj[cur_time];
@@ -2424,6 +2470,9 @@ CreatureModuleUtils.FillBoneCache = function(json_obj, key, start_time, end_time
 
     var set_index = cache_manager.getIndexByTime(cur_time);
     cache_manager.bone_cache_table[set_index] = cache_list;
+    
+    CreatureModuleUtils.FillBoneGapCache(prev_time, cur_time, set_index, cache_manager, cache_list);   
+	prev_time = cur_time;    
   }
 
   cache_manager.makeAllReady();
@@ -2432,7 +2481,8 @@ CreatureModuleUtils.FillBoneCache = function(json_obj, key, start_time, end_time
 CreatureModuleUtils.FillBoneCacheFlat = function(animBonesList, start_time, end_time, cache_manager)
 {
   cache_manager.init(start_time, end_time);
-
+  
+  var prev_time = start_time;
   for (var i = 0; i < animBonesList.timeSamplesLength(); i++)
   {
   	var cur_node = animBonesList.timeSamples(i);
@@ -2457,9 +2507,47 @@ CreatureModuleUtils.FillBoneCacheFlat = function(animBonesList, start_time, end_
 
     var set_index = cache_manager.getIndexByTime(cur_time);
     cache_manager.bone_cache_table[set_index] = cache_list;
+    
+    CreatureModuleUtils.FillBoneGapCache(prev_time, cur_time, set_index, cache_manager, cache_list);   
+	prev_time = cur_time;        
   }
 
   cache_manager.makeAllReady();
+};
+
+CreatureModuleUtils.FillDeformationGapCache = function(prev_time, cur_time, set_index, cache_manager, cache_list)
+{
+	var gap_diff = cur_time - prev_time;
+	if (gap_diff > 1)
+	{
+		// Gap Step
+		var prev_index = cache_manager.getIndexByTime(prev_time);
+		for (var j = 1; j < gap_diff; j++)
+		{
+			var gap_fraction = j / gap_diff;
+			var gap_cache_list = [];
+
+			for (var k = 0; k < cache_list.length; k++)
+			{
+				var cur_data = cache_manager.displacement_cache_table[set_index][k];
+				var prev_data = cache_manager.displacement_cache_table[prev_index][k];
+				var gap_cache_data = new MeshDisplacementCache(cur_data.getKey());
+				if (cur_data.getLocalDisplacements().length > 0)
+				{
+					gap_cache_data.setLocalDisplacements(
+						Utils.ptsInterp(prev_data.getLocalDisplacements(), cur_data.getLocalDisplacements(), gap_fraction));
+				}
+				else {
+					gap_cache_data.setPostDisplacements(
+						Utils.ptsInterp(prev_data.getPostDisplacements(), cur_data.getPostDisplacements(), gap_fraction));
+				}
+
+				gap_cache_list.push(gap_cache_data);
+			}
+
+			cache_manager.displacement_cache_table[prev_index + j] = gap_cache_list;
+		}
+	}	
 };
 
 CreatureModuleUtils.FillDeformationCache = function(json_obj, key, start_time, end_time, cache_manager)
@@ -2467,7 +2555,8 @@ CreatureModuleUtils.FillDeformationCache = function(json_obj, key, start_time, e
   var base_obj = json_obj[key];
 
   cache_manager.init(start_time, end_time);
-
+  
+  var prev_time = start_time;
   for (var cur_time in base_obj)
   {
   	var cur_node = base_obj[cur_time];
@@ -2498,6 +2587,9 @@ CreatureModuleUtils.FillDeformationCache = function(json_obj, key, start_time, e
 
     var set_index = cache_manager.getIndexByTime(cur_time);
     cache_manager.displacement_cache_table[set_index] = cache_list;
+    
+    CreatureModuleUtils.FillDeformationGapCache(prev_time, cur_time, set_index, cache_manager, cache_list);
+    prev_time = cur_time;
   }
 
   cache_manager.makeAllReady();
@@ -2507,6 +2599,7 @@ CreatureModuleUtils.FillDeformationCacheFlat = function(animMeshList, start_time
 {
   cache_manager.init(start_time, end_time);
 
+  var prev_time = start_time;
   for (var i = 0; i < animMeshList.timeSamplesLength(); i++)
   {
   	var cur_node = animMeshList.timeSamples(i);
@@ -2540,6 +2633,9 @@ CreatureModuleUtils.FillDeformationCacheFlat = function(animMeshList, start_time
 
     var set_index = cache_manager.getIndexByTime(cur_time);
     cache_manager.displacement_cache_table[set_index] = cache_list;
+    
+    CreatureModuleUtils.FillDeformationGapCache(prev_time, cur_time, set_index, cache_manager, cache_list);
+    prev_time = cur_time;    
   }
 
   cache_manager.makeAllReady();
@@ -2622,12 +2718,39 @@ CreatureModuleUtils.FillUVSwapCacheFlat = function(animUVList, start_time, end_t
   cache_manager.makeAllReady();
 };
 
+CreatureModuleUtils.FillOpacityGapCache = function(prev_time, cur_time, set_index, cache_manager, cache_list)
+{
+	var gap_diff = cur_time - prev_time;
+	if (gap_diff > 1)
+	{
+		// Gap Step
+		var prev_index = cache_manager.getIndexByTime(prev_time);
+		for (var j = 1; j < gap_diff; j++)
+		{
+			var gap_fraction = j / gap_diff;
+			var gap_cache_list = [];
+			for (var k = 0; k < cache_list.length; k++)
+			{
+				var cur_data = cache_manager.opacity_cache_table[set_index][k];
+				var prev_data = cache_manager.opacity_cache_table[prev_index][k];
+				var gap_cache_data = new MeshOpacityCache(cur_data.getKey());
+				gap_cache_data.setOpacity(Utils.scalarInterp(prev_data.getOpacity(), cur_data.getOpacity(), gap_fraction));
+
+				gap_cache_list.push(gap_cache_data);
+			}
+
+			cache_manager.opacity_cache_table[prev_index + j] = gap_cache_list;
+		}
+	}	
+};
+
 CreatureModuleUtils.FillOpacityCache = function(json_obj, key, start_time, end_time, cache_manager)
 {
   var base_obj = json_obj[key];
 
   cache_manager.init(start_time, end_time);
 
+  var prev_time = start_time;
   for (var cur_time in base_obj)
   {
   	var cur_node = base_obj[cur_time];
@@ -2646,6 +2769,9 @@ CreatureModuleUtils.FillOpacityCache = function(json_obj, key, start_time, end_t
 
     var set_index = cache_manager.getIndexByTime(cur_time);
     cache_manager.opacity_cache_table[set_index] = cache_list;
+    
+    CreatureModuleUtils.FillOpacityGapCache(prev_time, cur_time, set_index, cache_manager, cache_list);
+    prev_time = cur_time;
   }
 
   cache_manager.makeAllReady();
@@ -2655,6 +2781,7 @@ CreatureModuleUtils.FillOpacityCacheFlat = function(animOpacityList, start_time,
 {
   cache_manager.init(start_time, end_time);
 
+  var prev_time = start_time;
   for (var i = 0; i < animOpacityList.timeSamplesLength(); i++)
   {
   	var cur_node = animOpacityList.timeSamples(i);
@@ -2675,6 +2802,9 @@ CreatureModuleUtils.FillOpacityCacheFlat = function(animOpacityList, start_time,
 
     var set_index = cache_manager.getIndexByTime(cur_time);
     cache_manager.opacity_cache_table[set_index] = cache_list;
+    
+    CreatureModuleUtils.FillOpacityGapCache(prev_time, cur_time, set_index, cache_manager, cache_list);
+    prev_time = cur_time;    
   }
 
   cache_manager.makeAllReady();
