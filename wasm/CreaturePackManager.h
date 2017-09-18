@@ -7,6 +7,13 @@
 
 namespace CreaturePack
 {
+    typedef uint32_t rawPtr_t;
+
+    struct PlayerBounds
+    {
+        float x1, y1, x2, y2;
+    };
+
     class PackManager
     {
     public:
@@ -14,9 +21,9 @@ namespace CreaturePack
 
         virtual ~PackManager();
 
-        // Adds a new CreaturePack Loader given a byte stream
-        bool addPackLoader(const std::string& name_in, const std::vector<uint8_t>& byte_array);
-
+        // Adds a new CreaturePack Loader given a typed byte array
+        bool addPackLoader(const std::string& name_in, rawPtr_t data, int length);
+        
         // Adds a new CreaturePackPlayer and returns a unique handle/id given a loader name
         int addPackPlayer(const std::string& loader_name);
 
@@ -46,6 +53,12 @@ namespace CreaturePack
 
         // Returns the Uvs of the player given its handle/id
         emscripten::val getPlayerUVs(int handle);
+
+        // Returns the Indices of the player given its handle/id
+        emscripten::val getPlayerIndices(int handle);
+
+        // Returns the bounds of a player given its handle/id
+        PlayerBounds getPlayerBounds(int handle);
         
     protected:
         std::unordered_map<std::string, std::shared_ptr<CreaturePackLoader>> pack_loaders;

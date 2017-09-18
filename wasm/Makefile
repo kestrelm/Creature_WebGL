@@ -20,7 +20,4 @@ all: $(OBJS)
 # Cleans up object files and build directory
 clean:
 		rm *.o
-		rm *.wasm
 		rm *.wast
-		rm *.js
-		rm *.html

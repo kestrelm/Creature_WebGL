@@ -519,6 +519,7 @@ public:
 		// create data buffers
         renders_base_size = data.getNumPoints() / 2;
 		render_points = std::shared_ptr<float>(new float[getRenderPointsLength()], std::default_delete<float[]>());
+		render_2d_points = std::shared_ptr<float>(new float[getRender2DPointsLength()], std::default_delete<float[]>());
 		render_uvs = std::shared_ptr<float>(new float[getRenderUVsLength()], std::default_delete<float[]>());
 		render_colors = std::shared_ptr<uint8_t>(new uint8_t[getRenderColorsLength()], std::default_delete<uint8_t[]>());
 		
@@ -539,6 +540,10 @@ public:
 
     size_t getRenderPointsLength() const {
         return (size_t)renders_base_size * 3; 
+    }
+
+	size_t getRender2DPointsLength() const {
+        return (size_t)renders_base_size * 2; 
     }
 
     size_t getRenderUVsLength() const {
@@ -690,6 +695,13 @@ public:
                 render_points.get()[i * 3 + 2] = 0.0f;
 			}
 		}
+
+		// Copy to 2D points
+		for (auto i = 0; i < renders_base_size; i++)
+		{
+			render_2d_points.get()[i * 2] = render_points.get()[i * 3];
+			render_2d_points.get()[i * 2 + 1] = -render_points.get()[i * 3 + 1]; // Flip to account for 2D coordinate APIs
+		}
 		
 		// Colors
 		{
@@ -735,7 +747,7 @@ public:
 
     std::shared_ptr<float> render_uvs;
     std::shared_ptr<uint8_t> render_colors;
-    std::shared_ptr<float> render_points;
+    std::shared_ptr<float> render_points, render_2d_points;
 	int renders_base_size;
     std::unordered_map<std::string, float> runTimeMap;
     bool isPlaying, isLooping;
