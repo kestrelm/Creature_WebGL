@@ -25,7 +25,7 @@ View the Live demo **[here](http://www.kestrelmoon.com/creature/WebDemo/raptor_m
 
 ### WebAssembly Demo
 
-Unleash the power of high performance of **Web Assembly** with the new **CreaturePack WebAssembly** runtimes for [PixiJS](http://www.pixijs.com/)!
+Unleash the power of high performance **Web Assembly** with the new **CreaturePack WebAssembly** runtimes for [PixiJS](http://www.pixijs.com/)!
 
 This demo shows **200 (Not a Typo!!) mesh deforming raptor dinosaurs** running across the screen! The demo is using the **CreaturePack Web** format similar to the JS version to deliver results that have high performance, great quality and yet compact in delivery size. However, with thew new **Web Assembly** backend, the playback is even faster, capable of handling huge numbers of characters running live on your web browser. Even on moderately equipped PCs, this demo runs at a fluid 60 FPS. Make sure your browser has been updated to the latest version to take advantage of this exciting runtime.
 
