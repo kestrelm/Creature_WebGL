@@ -3540,36 +3540,8 @@ CreatureManager.prototype.SetActiveAnimationName = function(name_in, check_alrea
   this.active_animation_name = name_in;
   var cur_animation = this.animations[this.active_animation_name];
   this.run_time = cur_animation.start_time;
-
-  var displacement_cache_manager = cur_animation.displacement_cache;
-  var displacement_table =
-    displacement_cache_manager.displacement_cache_table[0];
-
-  var uv_warp_cache_manager = cur_animation.uv_warp_cache;
-  var uv_swap_table =
-    uv_warp_cache_manager.uv_cache_table[0];
-
-  var render_composition =
-    this.target_creature.render_composition;
-
-  var all_regions = render_composition.getRegions();
-
-  var index = 0;
-  for(var i = 0; i < all_regions.length; i++)
-  {
-  	var cur_region = all_regions[i];
-    // Setup active or inactive displacements
-    var use_local_displacements = !(displacement_table[index].getLocalDisplacements().length == 0);
-    var use_post_displacements = !(displacement_table[index].getPostDisplacements().length == 0);
-    cur_region.setUseLocalDisplacements(use_local_displacements);
-    cur_region.setUsePostDisplacements(use_post_displacements);
-
-    // Setup active or inactive uv swaps
-    cur_region.setUseUvWarp(uv_swap_table[index].getEnabled());
-
-    index++;
-  }
-
+  this.UpdateRegionsSwitches(name_in);
+  
   return true;
 };
 
@@ -3597,7 +3569,8 @@ CreatureManager.prototype.MakePointCache = function(animation_name_in)
         }
         
         var cache_pts_list = cur_animation.cache_pts;
-        
+        this.UpdateRegionsSwitches(animation_name_in);
+
         for(var i = cur_animation.start_time; i <= cur_animation.end_time; i++)
         {
             this.setRunTime(i);
@@ -3787,6 +3760,55 @@ CreatureManager.prototype.getRunTime = function()
   return this.run_time;
 };
 
+CreatureManager.prototype.checkAnimationBlendValid = function()
+{
+  for(var i = 0; i < 2; i++)
+  {
+    cur_animation_name = this.active_blend_animation_names[i];
+    if(!(cur_animation_name in this.animations) ||
+      !(cur_animation_name in this.active_blend_run_times))
+    {
+      return false;      
+    }
+  }
+
+  return true;
+};
+
+CreatureManager.prototype.UpdateRegionsSwitches = function(animation_name_in)
+{
+  var cur_animation = this.animations[animation_name_in];
+
+  var displacement_cache_manager = cur_animation.displacement_cache;
+  var displacement_table =
+    displacement_cache_manager.displacement_cache_table[0];
+
+  var uv_warp_cache_manager = cur_animation.uv_warp_cache;
+  var uv_swap_table =
+    uv_warp_cache_manager.uv_cache_table[0];
+
+  var render_composition =
+    this.target_creature.render_composition;
+
+  var all_regions = render_composition.getRegions();
+
+  var index = 0;
+  for(var i = 0; i < all_regions.length; i++)
+  {
+  	var cur_region = all_regions[i];
+    // Setup active or inactive displacements
+    var use_local_displacements = !(displacement_table[index].getLocalDisplacements().length == 0);
+    var use_post_displacements = !(displacement_table[index].getPostDisplacements().length == 0);
+    cur_region.setUseLocalDisplacements(use_local_displacements);
+    cur_region.setUsePostDisplacements(use_post_displacements);
+
+    // Setup active or inactive uv swaps
+    cur_region.setUseUvWarp(uv_swap_table[index].getEnabled());
+
+    index++;
+  }
+};
+
 // Runs a single step of the animation for a given delta timestep
 CreatureManager.prototype.Update = function(delta)
 {
@@ -3802,7 +3824,7 @@ CreatureManager.prototype.Update = function(delta)
   	this.IncreAutoBlendRunTimes(delta * this.time_scale);
   }
 
-  this.RunCreature ();
+  this.RunCreature();
 };
 
 CreatureManager.prototype.RunAtTime = function(time_in)
@@ -3824,13 +3846,16 @@ CreatureManager.prototype.RunCreature = function()
       cur_animation_name = this.active_blend_animation_names[i];
       var cur_animation = this.animations[this.active_blend_animation_names[i]];
       cur_animation_run_time = this.active_blend_run_times[cur_animation_name];
+
       if(cur_animation.cache_pts.length > 0)
       {
+        this.UpdateRegionsSwitches(cur_animation_name);
       	cur_animation.poseFromCachePts(cur_animation_run_time, this.blend_render_pts[i], this.target_creature.total_num_pts);
       }
       else {
-	  	this.PoseCreature(this.active_blend_animation_names[i], this.blend_render_pts[i], cur_animation_run_time);
-	  }
+        this.UpdateRegionsSwitches(cur_animation_name);
+	    	this.PoseCreature(this.active_blend_animation_names[i], this.blend_render_pts[i], cur_animation_run_time);
+  	  }
     }
 
     for(var j = 0; j < this.target_creature.total_num_pts * 3; j++)
@@ -3857,8 +3882,8 @@ CreatureManager.prototype.RunCreature = function()
     	// cur_animation->poseFromCachePts(getRunTime(), target_creature->GetRenderPts(), target_creature->GetTotalNumPoints());
     }
     else {
-		this.PoseCreature(this.active_animation_name, this.target_creature.render_pts, this.getRunTime());
-	}
+		  this.PoseCreature(this.active_animation_name, this.target_creature.render_pts, this.getRunTime());
+	  }
   }
   
   this.RunUVItemSwap();
