@@ -2255,7 +2255,7 @@ CreatureModuleUtils.CreateBonesFlat = function(skelIn) {
     bone_data[cur_id] = {first:new_bone, second:cur_children_ids};
 
     for(var j = 0; j < cur_children_ids.length; j++){
-      var cur_child_id = cur_children_ids[i];
+      var cur_child_id = cur_children_ids[j];
       child_set[cur_child_id] = cur_child_id;
     }
   }
