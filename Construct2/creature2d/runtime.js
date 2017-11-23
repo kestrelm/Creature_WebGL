@@ -57,6 +57,9 @@ cr.plugins_.Creature2d = function(runtime)
 		this.verticies = null;
 		this.uvs = null;
 		this.indices = null;
+		this.first_run = true;
+		this.pixel_scale_x = 1.0;
+		this.pixel_scale_y = 1.0;
 		
 		this.runtime.tickMe(this);
 	};
@@ -83,6 +86,19 @@ cr.plugins_.Creature2d = function(runtime)
 			this.creature_manager.Update(this.runtime.getDt(this));
 			this.dirty=true;
 			this.runtime.redraw = true;
+
+			if(this.first_run)
+			{
+				this.first_run = false;
+				// Compute Pixel Scaling
+				var target_creature = this.creature_manager.target_creature; 
+				target_creature.ComputeBoundaryMinMax();
+			    var mesh_size_x = target_creature.boundary_max[0] - target_creature.boundary_min[0];
+	    		var mesh_size_y = target_creature.boundary_max[1] - target_creature.boundary_min[1];
+
+	    		this.pixel_scale_x = 1.0 / mesh_size_x;
+				this.pixel_scale_y = 1.0 / mesh_size_y;			
+			}			
 		}
 	};
 	
@@ -112,20 +128,21 @@ cr.plugins_.Creature2d = function(runtime)
 			gl.bindBuffer(gl.ARRAY_BUFFER, this._uvBuffer);
 			gl.bufferData(gl.ARRAY_BUFFER,  this.uvs, gl.DYNAMIC_DRAW);
 		 
-			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this._indexBuffer);
-			gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.indices, gl.STATIC_DRAW);
 		}
-		
+
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this._indexBuffer);
+		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.indices, gl.DYNAMIC_DRAW);
+
 		//c2 setup
 		glw.setTexture(this.webGL_texture);
-		//glw.setOpacity(this.opacity);
+		glw.setOpacity(this.opacity);
 		
 		// save matrix
 		mat4.set(glw.matMV, this.saved_mat);
 		
 		glw.translate(this.x, this.y);
 		glw.rotateZ(this.angle);
-		glw.scale(this.width/50, this.height/50);
+		glw.scale(this.width * this.pixel_scale_x * this.xFlip, this.height * this.pixel_scale_y * this.yFlip);
 		glw.updateModelView();
 		glw.endBatch();
 		
@@ -217,14 +234,16 @@ cr.plugins_.Creature2d = function(runtime)
 		var creature = new Creature(actual_JSON);
 				
 		this.creature_manager = new CreatureManager(creature);
-		this.creature_manager.CreateAllAnimations(actual_JSON);
-
-		this.creature_manager.SetShouldLoop(true);
+		this.creature_manager.CreateAllAnimations(actual_JSON, false);
 		this.creature_manager.SetIsPlaying(true);
 		this.creature_manager.RunAtTime(0);
+		this.creature_manager.SetShouldLoop(true);
+		this.creature_manager.SetAutoBlending(true);
 
 		this.verticies = new Float32Array(creature.total_num_pts * 2);
 		this.uvs = new Float32Array(creature.total_num_pts * 2);
+		this.yFlip = 1.0;
+		this.xFlip = 1.0;
 		
 		this.indices = new Uint16Array(creature.global_indices.length);
 		for(var i = 0; i < this.indices.length; i++)
@@ -235,21 +254,100 @@ cr.plugins_.Creature2d = function(runtime)
 		this.dirty = true;
 	};
 
+	Acts.prototype.loadCreature2dMetaData = function(jsonText)
+	{
+		var actual_JSON = JSON.parse(jsonText);
+		var meta_data = CreatureModuleUtils.BuildCreatureMetaData(actual_JSON);
+		this.creature_manager.target_creature.SetMetaData(meta_data);
+	};
+
+	Acts.prototype.enableSkinSwap = function(swap_name_in)
+	{
+		var target_creature = this.creature_manager.target_creature;
+		target_creature.EnableSkinSwap(swap_name_in, true);
+		this.indices = new Uint16Array(target_creature.final_skin_swap_indices.length);
+		for(var i = 0; i < this.indices.length; i++)
+		{
+			this.indices[i] = target_creature.final_skin_swap_indices[i];
+		} 		
+	};
+
+	Acts.prototype.disableSkinSwap = function()
+	{
+		var target_creature = this.creature_manager.target_creature;
+		target_creature.DisableSkinSwap();
+		this.indices = new Uint16Array(target_creature.global_indices.length);
+		for(var i = 0; i < this.indices.length; i++)
+		{
+			this.indices[i] = target_creature.global_indices[i];
+		} 
+	};
+
 	Acts.prototype.switchAnimation = function(animationName)
 	{
 		this.creature_manager.SetActiveAnimationName(animationName, true);
+	};
+
+	Acts.prototype.autoBlendToAnimation = function(animationName, blendDelta)
+	{
+		this.creature_manager.AutoBlendTo(animationName, blendDelta);
 	};
 
 	Acts.prototype.setAnimationSpeed = function(speed)
 	{
 		this.creature_manager.time_scale = speed;
 	};
+
+	Acts.prototype.setXYFlip = function(xFlip, yFlip)
+	{
+		this.xFlip = xFlip;
+		this.yFlip = yFlip;
+	};
+
+	Acts.prototype.setAnimationStartEndTime = function(animationName, startTime, endTime)
+	{
+		var cur_animation = this.creature_manager.GetAnimation(animationName);
+		cur_animation.start_time = startTime;
+		cur_animation.end_time = endTime;		
+	};
+
+	Acts.prototype.setAnimationLoop = function(should_loop)
+	{
+		var real_val = false;
+		if(should_loop > 0)
+		{
+			real_val = true;	
+		}
+
+		this.creature_manager.SetShouldLoop(real_val);
+	};
+
+	Acts.prototype.makePointCache = function(animationName)
+	{
+		this.creature_manager.MakePointCache(animationName);
+	};
+
+	Acts.prototype.setAnchorPointsActive = function(anchorActive)
+	{
+		var real_val = false;
+		if(anchorActive > 0)
+		{
+			real_val = true;
+		}
+
+		this.creature_manager.anchor_points_active = real_val;
+	}
 	
 	pluginProto.acts = new Acts();
 	
 	//////////////////////////////////////
 	// Expressions
 	function Exps() {};
+
+	Exps.prototype.GetActiveAnimation = function(ret) {
+		var instance = this;
+		ret.set_string(this.creature_manager.GetActiveAnimation());
+	}
 
 	pluginProto.exps = new Exps();
 
