@@ -2975,12 +2975,14 @@ Creature.prototype.LoadFromData = function(load_data)
   	this.uv_swap_packets = CreatureModuleUtils.FillSwapUVPacketMap(json_uv_swap_base);
   }
   
+  /*
   // Load Anchor Points
   if("anchor_points_items" in load_data)
   {
   	var anchor_point_base = load_data["anchor_points_items"];
   	this.anchor_point_map = CreatureModuleUtils.FillAnchorPointMap(anchor_point_base);
   }
+  */
   
 };
 
@@ -3196,6 +3198,121 @@ CreatureAnimation.prototype.poseFromCachePts = function(time_in, target_pts, num
             floor_idx += 3;
             ceil_idx += 3;
         }
+};
+
+Creature.prototype.SetAnchorPointEnabled = function(value) {
+  this.anchor_points_active = value;
+};
+
+Creature.prototype.GetPixelScaling = function(desired_x, desired_y)
+{
+  // compute pixel scaling relative to mesh scaling
+  this.ComputeBoundaryMinMax();
+
+  var mesh_size_x = this.boundary_max[0] - this.boundary_min[0];
+  var mesh_size_y = this.boundary_max[1] - this.boundary_min[1];
+
+  var scale_x = 1.0 / mesh_size_x * desired_x;
+  var scale_y = 1.0 / mesh_size_y * desired_y;
+
+  return [scale_x, scale_y];
+};
+
+Creature.prototype.SetAnchorPoint = function(x, y, anim_clip_name_in) {
+  if (!anim_clip_name_in) {
+    anim_clip_name_in = 'default';
+  }
+
+  this.ComputeBoundaryMinMax();
+
+  var mesh_size_x = this.boundary_max[0] - this.boundary_min[0];
+  var mesh_size_y = this.boundary_max[1] - this.boundary_min[1];
+
+  var target_size_x = this.boundary_max[0];
+  var target_size_y = this.boundary_max[1];
+
+
+  if (x >= 0 && x !== null) {
+    target_size_x = (this.boundary_max[0] - (mesh_size_x * (x)));
+  }
+  else if (x < 0) {
+    target_size_x = -Math.abs(this.boundary_max[0] - (mesh_size_x * (Math.abs(x))));
+  }
+  else if (x === null) {
+    if (this.anchor_point_map && this.anchor_point_map[anim_clip_name_in]) {
+      target_size_x = this.anchor_point_map[anim_clip_name_in][0];
+    }
+    else {
+      target_size_x = 0;
+    }
+  }
+
+  if (y >= 0 && y !== null) {
+    target_size_y = (this.boundary_max[1] - (mesh_size_y * (y)));
+  }
+  else if (y < 0) {
+    target_size_y = -Math.abs(this.boundary_max[1] - (mesh_size_y * (Math.abs(y))));
+  }
+  else if (y === null) {
+    if (this.anchor_point_map && this.anchor_point_map[anim_clip_name_in]) {
+      target_size_y = this.anchor_point_map[anim_clip_name_in][1];
+    }
+    else {
+      target_size_y = 0;
+    }
+  }
+
+  var anchor_point_base = {
+    AnchorPoints: [
+      {
+        point: [target_size_x, target_size_y],
+        anim_clip_name: anim_clip_name_in
+      }
+    ]
+  };
+
+  this.anchor_point_map = this.FillAnchorPointMap(anchor_point_base);
+};
+
+
+Creature.prototype.FillAnchorPointMap = function(json_obj)
+{
+  var anchor_data_node = json_obj["AnchorPoints"];
+
+  ret_map = {};
+  for (var i = 0; i < anchor_data_node.length; i++)
+  {
+    var cur_node = anchor_data_node[i];
+    var cur_pt = this.ReadVector2JSON(cur_node, "point");
+    var cur_name = cur_node["anim_clip_name"];
+
+    ret_map[cur_name] = cur_pt;
+  }
+
+  return ret_map;
+};
+
+
+Creature.prototype.ReadVector2JSON = function(data, key)
+{
+  var raw_array = this.getFloatArray(data[key]);
+  return vec2.fromValues(raw_array[0], raw_array[1]);
+};
+
+Creature.prototype.getFloatArray = function(raw_data)
+{
+  return raw_data;
+};
+
+
+Creature.prototype.GetAnchorPoint = function(anim_clip_name_in)
+{
+  if(anim_clip_name_in in this.anchor_point_map)
+  {
+    return this.anchor_point_map[anim_clip_name_in];
+  }
+  
+  return vec2.fromValues(0, 0);
 };
 
 // CreatureManager
