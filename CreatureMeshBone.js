@@ -3390,6 +3390,58 @@ CreatureAnimation.prototype.poseFromCachePts = function(time_in, target_pts, num
         }
 };
 
+<<<<<<< HEAD
+// CreatureMetaData
+function CreatureMetaData()
+{
+  this.skin_swaps = {};
+};
+
+CreatureMetaData.prototype.clear = function()
+{
+  this.skin_swaps = {};
+};
+
+CreatureMetaData.prototype.buildSkinSwapIndices = function(swap_name, bone_composition)
+{
+  var skin_swap_indices = null;
+  if(!(swap_name in this.skin_swaps))
+  {
+    skin_swap_indices = [];
+    return skin_swap_indices;
+  }
+
+  var swap_set = this.skin_swaps[swap_name];
+  var total_size = 0;
+  var regions_map = bone_composition.getRegionsMap();
+  for(var region_name in regions_map)
+  {
+    if(region_name in swap_set)
+    {
+      var cur_region = regions_map[region_name];
+      total_size += cur_region.getNumIndices();
+    }
+  }
+
+  skin_swap_indices = [];
+  var offset = 0;
+  for(var region_name in regions_map)
+  {
+    if(region_name in swap_set)
+    {
+      var cur_region = regions_map[region_name];
+      for(var j = 0; j < cur_region.getNumIndices(); j++)
+      {
+        skin_swap_indices.push(cur_region.getLocalIndex(j));
+      }
+
+      offset += cur_region.getNumIndices();
+    }
+  }
+
+  return skin_swap_indices;
+};
+
 // CreatureMetaData
 function CreatureMetaData()
 {
@@ -3554,6 +3606,7 @@ Creature.prototype.GetAnchorPoint = function(anim_clip_name_in)
   }
   
   return vec2.fromValues(0, 0);
+};
 
 // CreatureManager
 function CreatureManager(target_creature_in)
