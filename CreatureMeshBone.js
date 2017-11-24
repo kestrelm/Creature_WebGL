@@ -3390,7 +3390,6 @@ CreatureAnimation.prototype.poseFromCachePts = function(time_in, target_pts, num
         }
 };
 
-<<<<<<< HEAD
 // CreatureMetaData
 function CreatureMetaData()
 {
