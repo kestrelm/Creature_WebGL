@@ -1,0 +1,73 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>CreaturePack WebAssembly Demo</title>
+        <script src="../pixi.js"></script>
+        <script src="CreaturePackWASMPixiJSRenderer.js"></script>        
+        <!-- This will load the WebAssembly module and run its main. --> 
+        <script src="creaturepack-wasm.js"></script>
+    </head>
+    <body>
+
+    <script type="text/javascript">
+
+    var loadFile = function (filePath, done) {
+	    var xhr = new XMLHttpRequest();
+	    xhr.onload = function () { return done(this.response); };
+        xhr.open("GET", filePath, true);
+        xhr.responseType = "arraybuffer";
+	    xhr.send();
+	};
+
+    window.onload = function() {
+        Module.addOnPreMain(function() {
+            var pack_manager = new Module.PackManager();
+            console.log("Loaded WebAssembly.");
+            loadFile("../raptor_data.creature_pack", function(response) {
+                var byte_array = new Uint8Array(response);
+                console.log("Loaded CreaturePack Data with size: " + byte_array.byteLength);
+                var load_bytes = CreatureASMUtils.heapBytes(byte_array);
+                var pack_loader = pack_manager.addPackLoader("Raptor", load_bytes.byteOffset, byte_array.byteLength);
+                var texture = PIXI.Texture.fromImage("../raptor_img.png");
+                
+                // Start PixiJS     
+        		// create a renderer instance.			
+        		var renderer = new PIXI.WebGLRenderer(window.innerWidth, window.innerHeight);
+        		//Create a container object called the `stage`
+                var stage = new PIXI.Container();
+
+        		// Add the renderer view element to the DOM
+                document.body.appendChild(renderer.view);
+                
+                // Add CreaturePack objects
+                var creatureContainer = new PIXI.DisplayObjectContainer();
+    			creatureContainer.position.x = window.innerWidth/2;
+    			creatureContainer.position.y = window.innerHeight/2;
+
+    			creatureContainer.scale.set(15.0);
+    			stage.addChild(creatureContainer);
+    			
+                var raptor_renderer = new CreaturePackRenderer(pack_manager ,"Raptor", texture);
+                raptor_renderer.packManager.setPlayerActiveAnimation(raptor_renderer.playerId, "clip1");
+    			creatureContainer.addChild(raptor_renderer);
+    			creatureContainer.scale.x = creatureContainer.scale.x;
+                    
+                function animate() {
+            		requestAnimationFrame( animate );
+                    
+                    raptor_renderer.packManager.stepPlayer(raptor_renderer.playerId, 1.0);
+                    raptor_renderer.refresh();
+            		// render the stage   
+            		renderer.render(stage);
+    		    }
+    		
+    		    animate();                
+    		});		
+
+        });
+    };
+    </script>
+
+    </body>
+</html>

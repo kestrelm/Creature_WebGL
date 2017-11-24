@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <title>hello phaser!</title>
-        <script src="phaser.js"></script>
+        <script src="phaser-2.js"></script>
         <script src="gl-matrix.js"></script>
 		<script src="flatbuffers.js"></script>
 		<script src="CreatureFlatData_generated.js"></script>
@@ -30,18 +30,12 @@
         var creaturePhasorObject2 = null;
 
         function preload () {
-
-            //game.load.image('logo', 'phaser.png');
-            game.load.text('iceJSON', 'iceDemonExport_character_data.json');
+            game.load.text('iceJSON', 'iceAnchorExport_character_data.json');
             //game.load.binary('succBin', 'succ_data.bytes', binaryLoadCallback, this);
-            //game.load.binary('succBin', 'opacityExport_character_data.bytes', binaryLoadCallback, this);
              
-            // create a texture from an image path
-            
-    		texture = PIXI.Texture.fromImage("iceDemonExport_character_img.png");
-    		//texture = PIXI.Texture.fromImage("debug3Export_character_img.png");
-    		//texture = PIXI.Texture.fromImage("opacityExport_character_img.png");
-			
+            // create a texture from an image path            
+			//game.load.image('succTexture', 'debug3Export_character_img.png');
+			game.load.image('iceDemonTexture', 'iceDemonExport_character_img.png');
         }
         
         function binaryLoadCallback(key, data) {
@@ -57,32 +51,39 @@
         }
 
         function create () {
+        	// Grab actual texture for rendering
+        	texture = new PIXI.Texture(game.cache.getBaseTexture('iceDemonTexture'));
+
 			initDebugging();
-            //var logo = game.add.sprite(game.world.centerX, game.world.centerY, 'logo');
-            //logo.anchor.setTo(0.5, 0.5);
             
             // Core Creature Objects
 			var actual_data = JSON.parse(game.cache.getText('iceJSON'));
 			//var actual_data = CreatureModuleUtils.LoadCreatureFlatData(game.cache.getBinary('succBin'));
 			
 			new_creature = new Creature(actual_data, false);
+			//new_creature.anchor_points_active = false;
 			//new_creature = new Creature(actual_data, true);
 			
-			//new_animation_1 = new CreatureAnimation(actual_JSON, "idle", new_creature);
-			//new_animation_2 = new CreatureAnimation(actual_JSON, "pose2", new_creature);
+			//new_animation_1 = new CreatureAnimation(actual_data, "idle", new_creature);
+			//new_animation_2 = new CreatureAnimation(actual_data, "back", new_creature);
 			
 			//new_animation_1 = new CreatureAnimation(actual_data, "idle", true);
 			//new_animation_1 = new CreatureAnimation(actual_data, "default", true);
 			new_animation_1 = new CreatureAnimation(actual_data, "default", false);
 			
 			new_manager = new CreatureManager(new_creature);
+			
 			new_manager.AddAnimation(new_animation_1);
+			new_manager.SetActiveAnimationName("default", false);
+
 			//new_manager.AddAnimation(new_animation_2);
 			//new_manager.SetActiveAnimationName("idle", false);
-			new_manager.SetActiveAnimationName("default", false);
+			//new_manager.SetAutoBlending(true);
+			//new_manager.AutoBlendTo("back", 0.01);
+			
+			//new_manager.SetActiveAnimationName("back", false);
 			new_manager.SetShouldLoop(true);
 			new_manager.SetIsPlaying(true);
-			//new_manager.RunAtTime(0);
 			
 			// Test point caching
 			//new_manager.MakePointCache("default");
@@ -97,14 +98,18 @@
 						
 			console.log('Loaded and created Core Creature Objects.');
 			
-			// Phasor Creature Object
-			
+			// Phasor Creature Object			
 			creaturePhasorObject = new Phaser.CreatureDraw(game.world, 
 													game.world.centerX, 
 													game.world.centerY,
 													new_manager,
 													texture);
-			creaturePhasorObject.scale.set(35.0);
+													
+			new_manager.RunAtTime(0);
+			var pixelScale = creaturePhasorObject.GetPixelScaling(600, 650); 
+			creaturePhasorObject.scale.set(pixelScale[0], pixelScale[1]);
+			
+			//creaturePhasorObject.scale.set(35.0);
 			creaturePhasorObject.timeDelta = 0.035;
 			game.world.add(creaturePhasorObject);
 			

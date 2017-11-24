@@ -325,6 +325,22 @@ Utils.vec2Interp = function(vec_1, vec_2, ratio)
 	return retVec;
 };
 
+Utils.ptsInterp = function(src_pts, target_pts, fraction)
+{
+    var ret_pts = [];
+    for (var i = 0; i < src_pts.length; i++)
+    {
+        ret_pts.push(Utils.vec2Interp(src_pts[i], target_pts[i], fraction));
+    }
+
+    return ret_pts;
+};
+
+Utils.scalarInterp = function(src_val, target_val, fraction)
+{
+    return ((1.0 - fraction) * src_val) + (fraction * target_val);
+};
+
 // MeshBone
 function MeshBone(key_in, start_pt_in, end_pt_in, parent_transform)
 {
@@ -1664,7 +1680,7 @@ MeshDisplacementCacheManager.prototype.retrieveValuesAtTime = function(time_in, 
       }
       else {
         for(var j = 0; j < displacements.length; j++) {
-          displacements.set[j] = vec2.create();
+          displacements[j] = vec2.create();
         }
       }
     }
@@ -1936,6 +1952,30 @@ CreatureModuleUtils.LoadCreatureFlatData = function(input_bytes)
 {
 	var buf = new flatbuffers.ByteBuffer(input_bytes);
 	return CreatureFlatData.rootData.getRootAsrootData(buf);
+};
+
+CreatureModuleUtils.BuildCreatureMetaData = function(json_data)
+{
+  var meta_data = new CreatureMetaData();
+  if("skinSwapList" in json_data)
+  {
+    var skin_swap_obj = json_data["skinSwapList"];
+    for(var swap_name in skin_swap_obj)
+    {
+      var swap_data = skin_swap_obj[swap_name]["swap"];
+      var swap_items = swap_data["swap_items"];
+      var swap_set = {};
+      for(var i = 0; i < swap_items.length; i++)
+      {
+        var cur_item = swap_items[i];
+        swap_set[cur_item] = cur_item;
+      }
+
+      meta_data.skin_swaps[swap_name] = swap_set;
+    }
+  }
+
+  return meta_data;
 };
 
 CreatureModuleUtils.GetAllAnimationNames = function(json_data)
@@ -2215,7 +2255,7 @@ CreatureModuleUtils.CreateBonesFlat = function(skelIn) {
     bone_data[cur_id] = {first:new_bone, second:cur_children_ids};
 
     for(var j = 0; j < cur_children_ids.length; j++){
-      var cur_child_id = cur_children_ids[i];
+      var cur_child_id = cur_children_ids[j];
       child_set[cur_child_id] = cur_child_id;
     }
   }
@@ -2372,12 +2412,42 @@ CreatureModuleUtils.GetStartEndTimesFlat = function(animBonesList)
   return {first:start_time, second:end_time};
 };
 
+CreatureModuleUtils.FillBoneGapCache = function(prev_time, cur_time, set_index, cache_manager, cache_list)
+{
+	var gap_diff = cur_time - prev_time;
+	if (gap_diff > 1)
+	{
+		// Gap Step
+		var prev_index = cache_manager.getIndexByTime(prev_time);
+		for (var j = 1; j < gap_diff; j++)
+		{
+			var gap_fraction = j / gap_diff;
+			var gap_cache_list = [];
+			for (var k = 0; k < cache_list.length; k++)
+			{
+				var cur_data = cache_manager.bone_cache_table[set_index][k];
+				var prev_data = cache_manager.bone_cache_table[prev_index][k];
+				var gap_cache_data = new MeshBoneCache(cur_data.getKey());
+				gap_cache_data.setWorldStartPt(
+					Utils.vecInterp(prev_data.getWorldStartPt(), cur_data.getWorldStartPt(), gap_fraction));
+				gap_cache_data.setWorldEndPt(
+					Utils.vecInterp(prev_data.getWorldEndPt(), cur_data.getWorldEndPt(), gap_fraction));
+
+				gap_cache_list.push(gap_cache_data);
+			}
+
+			cache_manager.bone_cache_table[prev_index + j] = gap_cache_list;
+		}
+	}	
+};
+
 CreatureModuleUtils.FillBoneCache = function(json_obj, key, start_time, end_time, cache_manager)
 {
   var base_obj = json_obj[key];
 
   cache_manager.init(start_time, end_time);
 
+  var prev_time = start_time;
   for (var cur_time in base_obj)
   {
   	var cur_node = base_obj[cur_time];
@@ -2400,6 +2470,9 @@ CreatureModuleUtils.FillBoneCache = function(json_obj, key, start_time, end_time
 
     var set_index = cache_manager.getIndexByTime(cur_time);
     cache_manager.bone_cache_table[set_index] = cache_list;
+    
+    CreatureModuleUtils.FillBoneGapCache(prev_time, cur_time, set_index, cache_manager, cache_list);   
+	prev_time = cur_time;    
   }
 
   cache_manager.makeAllReady();
@@ -2408,7 +2481,8 @@ CreatureModuleUtils.FillBoneCache = function(json_obj, key, start_time, end_time
 CreatureModuleUtils.FillBoneCacheFlat = function(animBonesList, start_time, end_time, cache_manager)
 {
   cache_manager.init(start_time, end_time);
-
+  
+  var prev_time = start_time;
   for (var i = 0; i < animBonesList.timeSamplesLength(); i++)
   {
   	var cur_node = animBonesList.timeSamples(i);
@@ -2433,9 +2507,47 @@ CreatureModuleUtils.FillBoneCacheFlat = function(animBonesList, start_time, end_
 
     var set_index = cache_manager.getIndexByTime(cur_time);
     cache_manager.bone_cache_table[set_index] = cache_list;
+    
+    CreatureModuleUtils.FillBoneGapCache(prev_time, cur_time, set_index, cache_manager, cache_list);   
+	prev_time = cur_time;        
   }
 
   cache_manager.makeAllReady();
+};
+
+CreatureModuleUtils.FillDeformationGapCache = function(prev_time, cur_time, set_index, cache_manager, cache_list)
+{
+	var gap_diff = cur_time - prev_time;
+	if (gap_diff > 1)
+	{
+		// Gap Step
+		var prev_index = cache_manager.getIndexByTime(prev_time);
+		for (var j = 1; j < gap_diff; j++)
+		{
+			var gap_fraction = j / gap_diff;
+			var gap_cache_list = [];
+
+			for (var k = 0; k < cache_list.length; k++)
+			{
+				var cur_data = cache_manager.displacement_cache_table[set_index][k];
+				var prev_data = cache_manager.displacement_cache_table[prev_index][k];
+				var gap_cache_data = new MeshDisplacementCache(cur_data.getKey());
+				if (cur_data.getLocalDisplacements().length > 0)
+				{
+					gap_cache_data.setLocalDisplacements(
+						Utils.ptsInterp(prev_data.getLocalDisplacements(), cur_data.getLocalDisplacements(), gap_fraction));
+				}
+				else {
+					gap_cache_data.setPostDisplacements(
+						Utils.ptsInterp(prev_data.getPostDisplacements(), cur_data.getPostDisplacements(), gap_fraction));
+				}
+
+				gap_cache_list.push(gap_cache_data);
+			}
+
+			cache_manager.displacement_cache_table[prev_index + j] = gap_cache_list;
+		}
+	}	
 };
 
 CreatureModuleUtils.FillDeformationCache = function(json_obj, key, start_time, end_time, cache_manager)
@@ -2443,7 +2555,8 @@ CreatureModuleUtils.FillDeformationCache = function(json_obj, key, start_time, e
   var base_obj = json_obj[key];
 
   cache_manager.init(start_time, end_time);
-
+  
+  var prev_time = start_time;
   for (var cur_time in base_obj)
   {
   	var cur_node = base_obj[cur_time];
@@ -2474,6 +2587,9 @@ CreatureModuleUtils.FillDeformationCache = function(json_obj, key, start_time, e
 
     var set_index = cache_manager.getIndexByTime(cur_time);
     cache_manager.displacement_cache_table[set_index] = cache_list;
+    
+    CreatureModuleUtils.FillDeformationGapCache(prev_time, cur_time, set_index, cache_manager, cache_list);
+    prev_time = cur_time;
   }
 
   cache_manager.makeAllReady();
@@ -2483,6 +2599,7 @@ CreatureModuleUtils.FillDeformationCacheFlat = function(animMeshList, start_time
 {
   cache_manager.init(start_time, end_time);
 
+  var prev_time = start_time;
   for (var i = 0; i < animMeshList.timeSamplesLength(); i++)
   {
   	var cur_node = animMeshList.timeSamples(i);
@@ -2516,6 +2633,9 @@ CreatureModuleUtils.FillDeformationCacheFlat = function(animMeshList, start_time
 
     var set_index = cache_manager.getIndexByTime(cur_time);
     cache_manager.displacement_cache_table[set_index] = cache_list;
+    
+    CreatureModuleUtils.FillDeformationGapCache(prev_time, cur_time, set_index, cache_manager, cache_list);
+    prev_time = cur_time;    
   }
 
   cache_manager.makeAllReady();
@@ -2598,12 +2718,39 @@ CreatureModuleUtils.FillUVSwapCacheFlat = function(animUVList, start_time, end_t
   cache_manager.makeAllReady();
 };
 
+CreatureModuleUtils.FillOpacityGapCache = function(prev_time, cur_time, set_index, cache_manager, cache_list)
+{
+	var gap_diff = cur_time - prev_time;
+	if (gap_diff > 1)
+	{
+		// Gap Step
+		var prev_index = cache_manager.getIndexByTime(prev_time);
+		for (var j = 1; j < gap_diff; j++)
+		{
+			var gap_fraction = j / gap_diff;
+			var gap_cache_list = [];
+			for (var k = 0; k < cache_list.length; k++)
+			{
+				var cur_data = cache_manager.opacity_cache_table[set_index][k];
+				var prev_data = cache_manager.opacity_cache_table[prev_index][k];
+				var gap_cache_data = new MeshOpacityCache(cur_data.getKey());
+				gap_cache_data.setOpacity(Utils.scalarInterp(prev_data.getOpacity(), cur_data.getOpacity(), gap_fraction));
+
+				gap_cache_list.push(gap_cache_data);
+			}
+
+			cache_manager.opacity_cache_table[prev_index + j] = gap_cache_list;
+		}
+	}	
+};
+
 CreatureModuleUtils.FillOpacityCache = function(json_obj, key, start_time, end_time, cache_manager)
 {
   var base_obj = json_obj[key];
 
   cache_manager.init(start_time, end_time);
 
+  var prev_time = start_time;
   for (var cur_time in base_obj)
   {
   	var cur_node = base_obj[cur_time];
@@ -2622,6 +2769,9 @@ CreatureModuleUtils.FillOpacityCache = function(json_obj, key, start_time, end_t
 
     var set_index = cache_manager.getIndexByTime(cur_time);
     cache_manager.opacity_cache_table[set_index] = cache_list;
+    
+    CreatureModuleUtils.FillOpacityGapCache(prev_time, cur_time, set_index, cache_manager, cache_list);
+    prev_time = cur_time;
   }
 
   cache_manager.makeAllReady();
@@ -2631,6 +2781,7 @@ CreatureModuleUtils.FillOpacityCacheFlat = function(animOpacityList, start_time,
 {
   cache_manager.init(start_time, end_time);
 
+  var prev_time = start_time;
   for (var i = 0; i < animOpacityList.timeSamplesLength(); i++)
   {
   	var cur_node = animOpacityList.timeSamples(i);
@@ -2651,6 +2802,9 @@ CreatureModuleUtils.FillOpacityCacheFlat = function(animOpacityList, start_time,
 
     var set_index = cache_manager.getIndexByTime(cur_time);
     cache_manager.opacity_cache_table[set_index] = cache_list;
+    
+    CreatureModuleUtils.FillOpacityGapCache(prev_time, cur_time, set_index, cache_manager, cache_list);
+    prev_time = cur_time;    
   }
 
   cache_manager.makeAllReady();
@@ -2768,7 +2922,7 @@ function Creature(load_data, use_flat_data)
 
 Creature.prototype.InitDefaultData = function()
 {
-	this.total_num_pts = 0;
+	  this.total_num_pts = 0;
     this.total_num_indices = 0;
     this.global_indices = null;
     this.global_pts = null;
@@ -2783,6 +2937,42 @@ Creature.prototype.InitDefaultData = function()
     this.active_uv_swap_actions = {};
     this.anchor_point_map = {};
     this.anchor_points_active = false;
+    this.skin_swap_active = false;
+    this.skin_swap_name = "";
+    this.final_skin_swap_indices = null;
+    this.creature_meta_data = null;
+};
+
+Creature.prototype.SetMetaData = function(creature_meta_data)
+{
+  this.creature_meta_data = creature_meta_data;
+};
+
+Creature.prototype.EnableSkinSwap = function(swap_name_in, active)
+{
+  this.skin_swap_active = active;
+  if(!this.skin_swap_active)
+  {
+    this.skin_swap_name = "";
+    this.final_skin_swap_indices = null;
+  }
+  else
+  {
+    this.skin_swap_name = swap_name_in;
+    this.final_skin_swap_indices = this.creature_meta_data.buildSkinSwapIndices(
+      this.skin_swap_name, 
+      this.render_composition);    
+  }
+};
+
+Creature.prototype.DisableSkinSwap = function()
+{
+  this.EnableSkinSwap("", false);
+};
+
+Creature.prototype.ShouldSkinSwap = function()
+{
+  return this.creature_meta_data && this.skin_swap_active && this.final_skin_swap_indices;
 };
 
 Creature.prototype.SetActiveItemSwap = function(region_name, swap_idx)
@@ -3200,6 +3390,57 @@ CreatureAnimation.prototype.poseFromCachePts = function(time_in, target_pts, num
         }
 };
 
+// CreatureMetaData
+function CreatureMetaData()
+{
+  this.skin_swaps = {};
+};
+
+CreatureMetaData.prototype.clear = function()
+{
+  this.skin_swaps = {};
+};
+
+CreatureMetaData.prototype.buildSkinSwapIndices = function(swap_name, bone_composition)
+{
+  var skin_swap_indices = null;
+  if(!(swap_name in this.skin_swaps))
+  {
+    skin_swap_indices = [];
+    return skin_swap_indices;
+  }
+
+  var swap_set = this.skin_swaps[swap_name];
+  var total_size = 0;
+  var regions_map = bone_composition.getRegionsMap();
+  for(var region_name in regions_map)
+  {
+    if(region_name in swap_set)
+    {
+      var cur_region = regions_map[region_name];
+      total_size += cur_region.getNumIndices();
+    }
+  }
+
+  skin_swap_indices = [];
+  var offset = 0;
+  for(var region_name in regions_map)
+  {
+    if(region_name in swap_set)
+    {
+      var cur_region = regions_map[region_name];
+      for(var j = 0; j < cur_region.getNumIndices(); j++)
+      {
+        skin_swap_indices.push(cur_region.getLocalIndex(j));
+      }
+
+      offset += cur_region.getNumIndices();
+    }
+  }
+
+  return skin_swap_indices;
+};
+
 Creature.prototype.SetAnchorPointEnabled = function(value) {
   this.anchor_points_active = value;
 };
@@ -3313,7 +3554,6 @@ Creature.prototype.GetAnchorPoint = function(anim_clip_name_in)
   }
   
   return vec2.fromValues(0, 0);
-};
 
 // CreatureManager
 function CreatureManager(target_creature_in)
@@ -3338,6 +3578,15 @@ function CreatureManager(target_creature_in)
     this.active_blend_animation_names = [];
     this.active_blend_animation_names.push("");
     this.active_blend_animation_names.push("");	
+    
+    this.do_auto_blending = false;
+    this.auto_blend_delta = 0.0;
+    
+    this.auto_blend_names = [];
+    this.auto_blend_names.push("");
+    this.auto_blend_names.push("");
+    
+    this.active_blend_run_times = {};
 };
 
 // Create an animation
@@ -3407,36 +3656,8 @@ CreatureManager.prototype.SetActiveAnimationName = function(name_in, check_alrea
   this.active_animation_name = name_in;
   var cur_animation = this.animations[this.active_animation_name];
   this.run_time = cur_animation.start_time;
-
-  var displacement_cache_manager = cur_animation.displacement_cache;
-  var displacement_table =
-    displacement_cache_manager.displacement_cache_table[0];
-
-  var uv_warp_cache_manager = cur_animation.uv_warp_cache;
-  var uv_swap_table =
-    uv_warp_cache_manager.uv_cache_table[0];
-
-  var render_composition =
-    this.target_creature.render_composition;
-
-  var all_regions = render_composition.getRegions();
-
-  var index = 0;
-  for(var i = 0; i < all_regions.length; i++)
-  {
-  	var cur_region = all_regions[i];
-    // Setup active or inactive displacements
-    var use_local_displacements = !(displacement_table[index].getLocalDisplacements().length == 0);
-    var use_post_displacements = !(displacement_table[index].getPostDisplacements().length == 0);
-    cur_region.setUseLocalDisplacements(use_local_displacements);
-    cur_region.setUsePostDisplacements(use_post_displacements);
-
-    // Setup active or inactive uv swaps
-    cur_region.setUseUvWarp(uv_swap_table[index].getEnabled());
-
-    index++;
-  }
-
+  this.UpdateRegionsSwitches(name_in);
+  
   return true;
 };
 
@@ -3464,14 +3685,15 @@ CreatureManager.prototype.MakePointCache = function(animation_name_in)
         }
         
         var cache_pts_list = cur_animation.cache_pts;
-        
+        this.UpdateRegionsSwitches(animation_name_in);
+
         for(var i = cur_animation.start_time; i <= cur_animation.end_time; i++)
         {
             this.setRunTime(i);
             var new_pts = [];
             for (var j = 0; j < this.target_creature.total_num_pts * 3; j++) new_pts[j] = 0; 
             //auto new_pts = new glm::float32[target_creature->GetTotalNumPoints() * 3];
-            this.PoseCreature(animation_name_in, new_pts);
+            this.PoseCreature(animation_name_in, new_pts, this.getRunTime());
             
             cache_pts_list.push(new_pts);
         }
@@ -3491,7 +3713,7 @@ CreatureManager.prototype.FillSinglePointCacheFrame = function(animation_name_in
 	this.setRunTime(time_in);
     var new_pts = [];
     for (var j = 0; j < this.target_creature.total_num_pts * 3; j++) new_pts[j] = 0; 
-    this.PoseCreature(animation_name_in, new_pts);
+    this.PoseCreature(animation_name_in, new_pts, time_in);
     
     cur_animation.fill_cache_pts.push(new_pts);
     cur_animation.verifyFillCache();
@@ -3530,6 +3752,68 @@ CreatureManager.prototype.SetIsPlaying = function(flag_in)
 {
   this.is_playing = flag_in;
 };
+
+CreatureManager.prototype.ProcessAutoBlending = function()
+{
+	// process blending factor
+	this.blending_factor += this.auto_blend_delta;
+	if(this.blending_factor > 1)
+	{
+		this.blending_factor = 1;
+	}
+};
+
+CreatureManager.prototype.IncreAutoBlendRunTimes = function(delta_in)
+{
+	set_animation_name = "";
+	for(var j = 0; j < this.auto_blend_names.length; j++)
+	{
+		var cur_animation_name = this.auto_blend_names[j];				
+		if ((cur_animation_name in this.animations) 
+				&& (set_animation_name != cur_animation_name))
+		{
+			cur_run_time = this.active_blend_run_times[cur_animation_name];
+			cur_run_time += delta_in;
+			cur_run_time = this.correctRunTime(cur_run_time, cur_animation_name);
+
+			this.active_blend_run_times[cur_animation_name] = cur_run_time;
+					
+			set_animation_name = cur_animation_name;
+		}
+	}
+};
+
+CreatureManager.prototype.correctRunTime = function(time_in, animation_name)
+{
+	ret_time = time_in;
+	cur_animation = this.animations[animation_name];
+	anim_start_time = cur_animation.start_time;
+	anim_end_time = cur_animation.end_time;
+			
+	if (ret_time > anim_end_time)
+	{
+		if (this.should_loop)
+		{
+			ret_time = anim_start_time;
+		}
+		else {
+			ret_time = anim_end_time;
+		}
+	}
+	else if (ret_time < anim_start_time)
+	{
+		if (this.should_loop)
+		{
+			ret_time = anim_end_time;
+		}
+		else {
+			ret_time = anim_start_time;
+		}
+	}
+			
+	return ret_time;
+};
+
 
 // Resets animation to start time
 CreatureManager.prototype.ResetToStartTimes = function()
@@ -3592,6 +3876,55 @@ CreatureManager.prototype.getRunTime = function()
   return this.run_time;
 };
 
+CreatureManager.prototype.checkAnimationBlendValid = function()
+{
+  for(var i = 0; i < 2; i++)
+  {
+    cur_animation_name = this.active_blend_animation_names[i];
+    if(!(cur_animation_name in this.animations) ||
+      !(cur_animation_name in this.active_blend_run_times))
+    {
+      return false;      
+    }
+  }
+
+  return true;
+};
+
+CreatureManager.prototype.UpdateRegionsSwitches = function(animation_name_in)
+{
+  var cur_animation = this.animations[animation_name_in];
+
+  var displacement_cache_manager = cur_animation.displacement_cache;
+  var displacement_table =
+    displacement_cache_manager.displacement_cache_table[0];
+
+  var uv_warp_cache_manager = cur_animation.uv_warp_cache;
+  var uv_swap_table =
+    uv_warp_cache_manager.uv_cache_table[0];
+
+  var render_composition =
+    this.target_creature.render_composition;
+
+  var all_regions = render_composition.getRegions();
+
+  var index = 0;
+  for(var i = 0; i < all_regions.length; i++)
+  {
+  	var cur_region = all_regions[i];
+    // Setup active or inactive displacements
+    var use_local_displacements = !(displacement_table[index].getLocalDisplacements().length == 0);
+    var use_post_displacements = !(displacement_table[index].getPostDisplacements().length == 0);
+    cur_region.setUseLocalDisplacements(use_local_displacements);
+    cur_region.setUsePostDisplacements(use_post_displacements);
+
+    // Setup active or inactive uv swaps
+    cur_region.setUseUvWarp(uv_swap_table[index].getEnabled());
+
+    index++;
+  }
+};
+
 // Runs a single step of the animation for a given delta timestep
 CreatureManager.prototype.Update = function(delta)
 {
@@ -3601,8 +3934,13 @@ CreatureManager.prototype.Update = function(delta)
   }
 
   this.increRunTime(delta * this.time_scale);
+  
+  if(this.do_auto_blending) {
+  	this.ProcessAutoBlending();
+  	this.IncreAutoBlendRunTimes(delta * this.time_scale);
+  }
 
-  this.RunCreature ();
+  this.RunCreature();
 };
 
 CreatureManager.prototype.RunAtTime = function(time_in)
@@ -3621,14 +3959,19 @@ CreatureManager.prototype.RunCreature = function()
   if(this.do_blending)
   {
     for(var i = 0; i < 2; i++) {
+      cur_animation_name = this.active_blend_animation_names[i];
       var cur_animation = this.animations[this.active_blend_animation_names[i]];
+      cur_animation_run_time = this.active_blend_run_times[cur_animation_name];
+
       if(cur_animation.cache_pts.length > 0)
       {
-      	cur_animation.poseFromCachePts(this.getRunTime(), this.blend_render_pts[i], this.target_creature.total_num_pts);
+        this.UpdateRegionsSwitches(cur_animation_name);
+      	cur_animation.poseFromCachePts(cur_animation_run_time, this.blend_render_pts[i], this.target_creature.total_num_pts);
       }
       else {
-	  	this.PoseCreature(this.active_blend_animation_names[i], this.blend_render_pts[i]);
-	  }
+        this.UpdateRegionsSwitches(cur_animation_name);
+	    	this.PoseCreature(this.active_blend_animation_names[i], this.blend_render_pts[i], cur_animation_run_time);
+  	  }
     }
 
     for(var j = 0; j < this.target_creature.total_num_pts * 3; j++)
@@ -3641,9 +3984,9 @@ CreatureManager.prototype.RunCreature = function()
          ((1.0f - blending_factor) * (read_data_1)) +
          (blending_factor * (read_data_2));
        */
-      this.target_creature.render_pts.set(set_data_index,
-          ((1.0 - blending_factor) * (read_data_1)) +
-          (blending_factor * (read_data_2)));
+      this.target_creature.render_pts[set_data_index] =
+          ((1.0 - this.blending_factor) * (read_data_1)) +
+          (this.blending_factor * (read_data_2));
 
     }
   }
@@ -3655,8 +3998,8 @@ CreatureManager.prototype.RunCreature = function()
     	// cur_animation->poseFromCachePts(getRunTime(), target_creature->GetRenderPts(), target_creature->GetTotalNumPoints());
     }
     else {
-		this.PoseCreature(this.active_animation_name, this.target_creature.render_pts);
-	}
+		  this.PoseCreature(this.active_animation_name, this.target_creature.render_pts, this.getRunTime());
+	  }
   }
   
   this.RunUVItemSwap();
@@ -3745,12 +4088,12 @@ CreatureManager.prototype.SetBlending = function(flag_in)
   if (this.do_blending) {
     if (this.blend_render_pts[0].length == 0) {
       var new_vec = [];
-      for(var i = 0; i < target_creature.total_num_pts * 3; i++)
+      for(var i = 0; i < this.target_creature.total_num_pts * 3; i++)
       {
         new_vec.push(0);
       }
 
-      this.blend_render_pts.set(0, new_vec);
+      this.blend_render_pts.push(new_vec);
     }
 
     if (this.blend_render_pts[1].length == 0) {
@@ -3764,6 +4107,45 @@ CreatureManager.prototype.SetBlending = function(flag_in)
     }
 
   }
+};
+
+// Sets auto blending
+CreatureManager.prototype.SetAutoBlending = function(flag_in)
+{
+	this.do_auto_blending = flag_in;
+	this.SetBlending(flag_in);
+			
+	if(this.do_auto_blending)
+	{
+		this.AutoBlendTo(this.active_animation_name, 0.1);
+	}	
+};
+
+// Use auto blending to blend to the next animation
+CreatureManager.prototype.AutoBlendTo = function(animation_name_in, blend_delta)
+{
+	if(animation_name_in == this.auto_blend_names[1])
+	{
+		// already blending to that so just return
+		return;
+	}
+			
+	this.ResetBlendTime(animation_name_in);
+			
+	this.auto_blend_delta = blend_delta;
+	this.auto_blend_names[0] = this.active_animation_name;
+	this.auto_blend_names[1] = animation_name_in;
+	this.blending_factor = 0;
+			
+	this.active_animation_name = animation_name_in;
+			
+	this.SetBlendingAnimations(this.auto_blend_names[0], this.auto_blend_names[1]);
+};
+
+CreatureManager.prototype.ResetBlendTime = function(name_in)
+{
+	cur_animation = this.animations[name_in];
+	this.active_blend_run_times[name_in] = cur_animation.start_time;
 };
 
 // Sets blending animation names
@@ -3788,7 +4170,7 @@ CreatureManager.prototype.IsContactBone = function(pt_in, radius)
 };
 
 
-CreatureManager.prototype.PoseCreature = function(animation_name_in, target_pts)
+CreatureManager.prototype.PoseCreature = function(animation_name_in, target_pts, input_run_time)
 {
   var cur_animation = this.animations[animation_name_in];
 
@@ -3806,7 +4188,7 @@ CreatureManager.prototype.PoseCreature = function(animation_name_in, target_pts)
   var regions_map =
     render_composition.getRegionsMap();
 
-  bone_cache_manager.retrieveValuesAtTime(this.getRunTime(),
+  bone_cache_manager.retrieveValuesAtTime(input_run_time,
       bones_map);
       
   this.AlterBonesByAnchor(bones_map, animation_name_in);
@@ -3816,11 +4198,11 @@ CreatureManager.prototype.PoseCreature = function(animation_name_in, target_pts)
   	this.bones_override_callback(bones_map);
   }
 
-  displacement_cache_manager.retrieveValuesAtTime(this.getRunTime(),
+  displacement_cache_manager.retrieveValuesAtTime(input_run_time,
       regions_map);
-  uv_warp_cache_manager.retrieveValuesAtTime(this.getRunTime(),
+  uv_warp_cache_manager.retrieveValuesAtTime(input_run_time,
       regions_map);
-  opacity_cache_manager.retrieveValuesAtTime(this.getRunTime(),
+  opacity_cache_manager.retrieveValuesAtTime(input_run_time,
 			                                 regions_map);
 
   // Do posing, decide if we are blending or not

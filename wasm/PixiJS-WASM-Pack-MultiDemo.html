@@ -1,0 +1,168 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>CreaturePack WebAssembly Demo</title>
+        <script src="../pixi.js"></script>
+        <script src="CreaturePackWASMPixiJSRenderer.js"></script>        
+        <!-- This will load the WebAssembly module and run its main. --> 
+        <script src="creaturepack-wasm.js"></script>
+        <script src="//rawgit.com/mrdoob/stats.js/master/build/stats.min.js"></script>
+
+        <style>
+        .loader {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            z-index: 1;
+            width: 150px;
+            height: 150px;
+            margin: -75px 0 0 -75px;
+            border: 16px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 16px solid #3498db;
+            width: 120px;
+            height: 120px;
+            -webkit-animation: spin 2s linear infinite;
+            animation: spin 2s linear infinite;
+          }
+          
+          @-webkit-keyframes spin {
+            0% { -webkit-transform: rotate(0deg); }
+            100% { -webkit-transform: rotate(360deg); }
+          }
+          
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }        
+        </style>
+    </head>
+    <body>
+
+    <div class="loader"></div>
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script type="text/javascript">
+    $(window).load(function() {
+        $(".loader").fadeOut("slow");
+    })
+    </script>
+    
+    
+    <script type="text/javascript">    
+
+    var loadFile = function (filePath, done) {
+	    var xhr = new XMLHttpRequest();
+	    xhr.onload = function () { return done(this.response); };
+        xhr.open("GET", filePath, true);
+        xhr.responseType = "arraybuffer";
+	    xhr.send();
+	};
+
+    window.onload = function() {
+        Module.addOnPreMain(function() {
+            var pack_manager = new Module.PackManager();
+            console.log("Loaded WebAssembly.");
+            loadFile("../raptor_data.creature_pack", function(response) {
+                var byte_array = new Uint8Array(response);
+                console.log("Loaded CreaturePack Data with size: " + byte_array.byteLength);
+                var load_bytes = CreatureASMUtils.heapBytes(byte_array);
+                var pack_loader = pack_manager.addPackLoader("Raptor", load_bytes.byteOffset, byte_array.byteLength);
+                var texture = PIXI.Texture.fromImage("../raptor_img.png");
+
+                // Stats
+                var stats = new Stats();
+                stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom
+                document.body.appendChild( stats.dom );
+                
+                // Start PixiJS     
+        		// create a renderer instance.			
+        		var renderer = new PIXI.WebGLRenderer(window.innerWidth, window.innerHeight);
+        		//Create a container object called the `stage`
+                var stage = new PIXI.Container();
+
+        		// Add the renderer view element to the DOM
+                document.body.appendChild(renderer.view);
+                
+                // Add CreaturePack objects
+                var allContainers = []
+                var numObjs = 200;
+
+                function randomIntFromInterval(min,max)
+                {           
+                    return Math.floor(Math.random()*(max-min+1)+min);
+                }                
+                
+                for(var i = 0; i < numObjs; i++) {
+                    var creatureContainer = new PIXI.DisplayObjectContainer();
+                    var setScale = randomIntFromInterval(10, 20);
+        			creatureContainer.scale.set(setScale);
+        			creatureContainer.position.x = randomIntFromInterval(0, window.innerWidth);
+                    creatureContainer.position.y = window.innerHeight * 0.5 + (20 - setScale) * 10;
+        			stage.addChild(creatureContainer);
+        			
+                    var raptor_renderer = new CreaturePackRenderer(pack_manager ,"Raptor", texture);
+                    raptor_renderer.packManager.setPlayerActiveAnimation(raptor_renderer.playerId, "clip1");
+                    raptor_renderer.packManager.stepPlayer(raptor_renderer.playerId, randomIntFromInterval(0, 200));
+        			creatureContainer.addChild(raptor_renderer);
+                    creatureContainer.scale.x = creatureContainer.scale.x;
+
+                    var charData = {}
+                    charData["container"] = creatureContainer;
+                    charData["render"] = raptor_renderer;
+                    charData["speed"] = randomIntFromInterval(5, 10);
+                    allContainers.push(charData);
+                }
+                
+                var text = new PIXI.Text(
+                    "CreaturePack WebAssembly Demo with " + numObjs + " Real-time Mesh Deforming Dinosaurs!", 
+                    {font:"30px Arial", fill:"yellow"});
+                text.position.x = 10;                    
+                text.position.y = 42;
+                stage.addChild(text);           
+
+                var text2 = new PIXI.Text(
+                    "UtahRaptor Artwork: Emily Willoughby (http://emilywilloughby.com)", 
+                    {font:"15px Arial", fill:"white"});          
+                text2.position.x = 12;                    
+                text2.position.y =  text.position.y + 30;          
+                stage.addChild(text2);           
+
+                
+                function animate() {
+            		requestAnimationFrame( animate );
+                    
+                    stats.begin();
+
+                    for(var i = 0; i < numObjs; i++) {
+                        var curObj = allContainers[i];
+                        var curRender = curObj["render"];
+                        var curContainer = curObj["container"];
+                        var curX = curContainer.position.x;
+                        curX -= curObj["speed"];
+                        if(curX < -800)
+                        {
+                            curX = window.innerWidth + 300;
+                        }
+                        curContainer.position.x = curX;
+
+                        curRender.packManager.stepPlayer(curRender.playerId, 1.0);
+                        curRender.refresh();
+                    }
+
+                    stats.end();
+
+            		// render the stage   
+            		renderer.render(stage);
+    		    }
+    		
+    		    animate();                
+    		});		
+
+        });
+    };
+    </script>
+
+    </body>
+</html>
