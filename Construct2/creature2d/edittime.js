@@ -12,7 +12,7 @@ function GetPluginSettings()
 		"category":		"General",				// Prefer to re-use existing categories, but you can set anything here
 		"type":			"world",				// either "world" (appears in layout and is drawn), else "object"
 		"rotatable":	true,					// only used when "type" is "world".  Enables an angle property on the object.
-		"dependency":	"gl-matrix.js;CreatureMeshBone.js",
+		"dependency":	"gl-matrix.js;CreatureMeshBone.js;flatbuffers.js;CreatureFlatData_generated.js",
 		"flags":		0						// uncomment lines to enable flags...
 					//	| pf_singleglobal		// exists project-wide, e.g. mouse, keyboard.  "type" must be "object".
 						| pf_texture			// object has a single texture (e.g. tiled background)
@@ -79,10 +79,38 @@ AddAction(0, af_none, "Load json", "creature2d", "Load creature2d json {0}", "Lo
 AddStringParam("animationName", "Enter Animation CLip to switch to.");
 AddAction(1, af_none, "Switch Animation", "creature2d", "Switch creature2d animation {1}", "Switch creature2d animation.", "switchAnimation");
 
+AddStringParam("animationBlendName", "Enter Animation C;ip to blend into.");
+AddNumberParam("animationBlendDelta", "Enter Blend Delta (0 to 1)", "0.1");
+AddAction(2, af_none, "Blend To Animation", "creature2d", "Blend to creature2d animation {2}", "Blend to creature2d animation.", "autoBlendToAnimation");
+
 AddNumberParam("animationSpeed", "Enter Speed of Animation Playback", "30");
-AddAction(2, af_none, "Set Animation Speed", "creature2d", "Set creature2d animation speed {2}", "Set creature2d animation speed", "setAnimationSpeed");
+AddAction(3, af_none, "Set Animation Speed", "creature2d", "Set creature2d animation speed {3}", "Set creature2d animation speed", "setAnimationSpeed");
 
+AddNumberParam("animationYFlip", "Flips along Y-Axis (-1 or 1)", "1");
+AddNumberParam("animationXFlip", "Flips along X-Axis (-1 or 1)", "1");
+AddAction(4, af_none, "Set Animation Axis Flip", "creature2d", "Set Animation Axis Flip {4}", "Set Animation Axis Flip", "setXYFlip");
 
+AddNumberParam("animationName", "Name of Animation");
+AddNumberParam("animationStartTime", "Set Start Time", "0");
+AddNumberParam("animationEndTime", "Set End Time", "1");
+AddAction(5, af_none, "Set Animation Clip Start/End Time", "creature2d", "Set Animation Clip Start/End Time {5}", "Set Animation Clip Start/End Time", "setAnimationStartEndTime");
+
+AddNumberParam("animationLoop", "1 to Loop, 0 to not Loop", "1");
+AddAction(6, af_none, "Set Animation Loop", "creature2d", "Set Animation Loop {6}", "Set Animation Loop", "setAnimationLoop");
+
+AddStringParam("pointCache", "Enter Animation Name to Point Cache");
+AddAction(7, af_none, "Make Point Cache", "creature2d", "Make Point Cache {7}", "Make Point Cache.", "makePointCache");
+
+AddNumberParam("anchorPoints", "Set Anchor Points Active (0 inactive, 1 active)", "0");
+AddAction(8, af_none, "Set Anchor Points Actived", "creature2d", "Set Anchor Points Active {8}", "Set Anchor Points Active", "setAnchorPointsActive");
+
+AddStringParam("metaDataJSon", "Enter a creature2d MetaData JSON.");
+AddAction(9, af_none, "Load MetaData JSON", "creature2d", "Load MetaData JSON {9}", "Load MetaData JSON.", "loadCreature2dMetaData");
+
+AddStringParam("skinSwap", "Enter a SkinSwap Name.");
+AddAction(10, af_none, "SkinSwap", "creature2d", "SkinSwap {10}", "SkinSwap.", "enableSkinSwap");
+
+AddAction(11, af_none, "Disable SkinSwap", "creature2d", "Disable SkinSwap {11}", "Disable SkinSwap.", "disableSkinSwap");
 
 ////////////////////////////////////////
 // Expressions
@@ -98,6 +126,9 @@ AddAction(2, af_none, "Set Animation Speed", "creature2d", "Set creature2d anima
 // example
 //AddExpression(0, ef_return_number, "Leet expression", "My category", "MyExpression", "Return the number 1337.");
 
+var exp_id = 1;
+
+AddExpression(exp_id++, ef_return_string, "Get Active Animation", "Creature2D Expressions", "GetActiveAnimation", "Get Active Animation");
 ////////////////////////////////////////
 ACESDone();
 

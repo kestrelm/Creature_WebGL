@@ -1,0 +1,68 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>CreaturePack WebAssembly Demo</title>
+        <script src="pixi.js"></script>
+        <script src="msgpack.js"></script>
+		<script src="CreaturePackModule.js"></script>
+        <script src="CreaturePackPixiJSRefRenderer.js"></script>        
+    </head>
+    <body>
+
+    <script type="text/javascript">
+
+    var loadFile = function (filePath, done) {
+	    var xhr = new XMLHttpRequest();
+	    xhr.onload = function () { return done(this.response); };
+        xhr.open("GET", filePath, true);
+        xhr.responseType = "arraybuffer";
+	    xhr.send();
+	};
+
+    window.onload = function() {
+        loadFile("raptor_data.creature_pack", function(response) {
+            var byte_array = new Uint8Array(response);
+            console.log("Loaded CreaturePack Data with size: " + byte_array.byteLength);
+            creature_pack = new CreaturePackLoader(byte_array.buffer);
+            var texture = PIXI.Texture.fromImage("raptor_img.png");
+            
+            // Start PixiJS     
+    		// create a renderer instance.			
+    		var renderer = new PIXI.WebGLRenderer(window.innerWidth, window.innerHeight);
+    		//Create a container object called the `stage`
+            var stage = new PIXI.Container();
+
+    		// Add the renderer view element to the DOM
+            document.body.appendChild(renderer.view);
+            
+            // Add CreaturePack objects
+            var creatureContainer = new PIXI.DisplayObjectContainer();
+			creatureContainer.position.x = window.innerWidth/2;
+			creatureContainer.position.y = window.innerHeight/2;
+
+			creatureContainer.scale.set(15.0);
+			stage.addChild(creatureContainer);
+			
+            var raptor_renderer = new CreaturePackRenderer(creature_pack, texture);
+            raptor_renderer.pack_renderer.setActiveAnimation("clip1");
+			creatureContainer.addChild(raptor_renderer);
+			creatureContainer.scale.x = creatureContainer.scale.x;
+                
+            function animate() {
+        		requestAnimationFrame( animate );
+                raptor_renderer.pack_renderer.stepTime(1.0);
+                raptor_renderer.refresh();
+        		// render the stage   
+        		renderer.render(stage);
+		    }
+		
+		    animate();                
+        });		
+    };
+
+
+    </script>
+
+    </body>
+</html>

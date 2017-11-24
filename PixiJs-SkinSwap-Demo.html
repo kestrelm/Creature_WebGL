@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+	
+	<head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+      <title>PixiJs - Basic scene</title>
+      
+      <style>
+      
+      	canvas {
+ 		   border: 1px dashed gray;
+	  	}
+	  	
+  		html, body {
+    		overflow: hidden;
+    		width: 100%;
+    		height: 100%;
+    		margin: 0;
+    		padding: 0;
+  		}
+
+	  </style>
+
+   </head>
+   
+<body>
+
+<h1>My First Web Page</h1>
+
+<p>My first paragraph.</p>
+
+<script src="pixi.js"></script>
+<script src="gl-matrix.js"></script>
+<script src="flatbuffers.js"></script>
+<script src="CreatureFlatData_generated.js"></script>
+<script src="CreatureMeshBone.js"></script>
+<script src="CreaturePixiJSRefRenderer.js"></script>
+
+<script>
+
+	var loadFile = function (filePath, done) {
+	    var xhr = new XMLHttpRequest();
+	    xhr.onload = function () { return done(this.responseText); };
+	    xhr.open("GET", filePath, true);
+	    xhr.send();
+	};
+	
+	var char_json = null;
+	var meta_json = null;
+	loadFile('skinSwap_character_data.json', function(responseText) {
+		char_json = JSON.parse(responseText);
+		
+		loadFile('skinSwap_character_data_meta.mdata', function(responseText) {
+			meta_json = JSON.parse(responseText);
+			runApp();
+		});		
+	});
+
+
+	
+	function runApp() {
+		var new_creature = new Creature(char_json, false);
+	
+		var new_animation_1 = new CreatureAnimation(char_json, "cape", false);
+		var new_manager = new CreatureManager(new_creature);
+		new_manager.AddAnimation(new_animation_1);
+		new_manager.SetActiveAnimationName("cape", false);
+		new_manager.SetShouldLoop(true);
+		new_manager.SetIsPlaying(true);
+		new_manager.RunAtTime(0);
+		
+		var meta_data = CreatureModuleUtils.BuildCreatureMetaData(meta_json);
+		new_creature.SetMetaData(meta_data);
+	
+		// create an new instance of a pixi stage
+		var stage = new PIXI.Stage(0x000000);
+	
+		// create a renderer instance.
+		var renderer = PIXI.autoDetectRenderer(window.innerWidth, window.innerHeight);
+	
+		if (renderer.type == PIXI.WEBGL_RENDERER) {
+			console.log('Using WebGL');
+		} else {
+			console.log('Using Canvas');
+		};
+	
+		// add the renderer view element to the DOM
+		document.body.appendChild(renderer.view);
+	
+		// create a texture from an image path
+		var texture = PIXI.Texture.fromImage("skinSwap_character_img.png");
+	
+		var creatureContainer = new PIXI.DisplayObjectContainer();
+		creatureContainer.position.x = window.innerWidth / 2;
+		creatureContainer.position.y = window.innerHeight / 2;
+	
+		creatureContainer.scale.set(45.0);
+		stage.addChild(creatureContainer);
+	
+		var new_creature_renderer = new CreatureRenderer(new_manager, texture);
+		new_creature_renderer.EnableSkinSwap("cape", true);
+		creatureContainer.addChild(new_creature_renderer);
+	
+		var swap_cnter = 0;
+		var swap_type = 0;
+		function animate() {
+			requestAnimationFrame(animate);
+	
+			new_manager.Update(0.05);
+			new_creature_renderer.refresh();
+	
+			// render the stage
+			renderer.render(stage);
+			
+			swap_cnter += 1;
+			if(swap_cnter % 100 == 0)
+			{
+				swap_type += 1;
+				if(swap_type % 3 == 0)
+				{
+					new_creature_renderer.EnableSkinSwap("dressSword", true);					
+				}
+				else if(swap_type % 3 == 1)
+				{
+					new_creature_renderer.EnableSkinSwap("defaultGun", true);										
+				}
+				else if(swap_type % 3 == 2)
+				{
+					new_creature_renderer.EnableSkinSwap("cape", true);					
+				}
+			}
+		}
+	
+		animate();
+	};
+
+</script>
+
+</body>
+</html> 

@@ -1,0 +1,3 @@
+wasm/.vscode/settings.json
+wasm/creaturepack-wasm.wast
+*.o
