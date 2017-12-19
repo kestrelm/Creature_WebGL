@@ -1945,6 +1945,8 @@ CreatureModuleUtils.LoadCreatureFlatData = function(input_bytes)
 CreatureModuleUtils.BuildCreatureMetaData = function(json_data)
 {
   var meta_data = new CreatureMetaData();
+
+  // Skin Swap
   if("skinSwapList" in json_data)
   {
     var skin_swap_obj = json_data["skinSwapList"];
@@ -1960,6 +1962,42 @@ CreatureModuleUtils.BuildCreatureMetaData = function(json_data)
       }
 
       meta_data.skin_swaps[swap_name] = swap_set;
+    }
+  }
+  
+  // Region Ordering
+  if("meshes" in json_data)
+  {
+    var all_meshes = json_data["meshes"];
+    for(var mesh_name in all_meshes)
+    {
+      var cur_obj = all_meshes[mesh_name];
+      var region_id = Number(cur_obj["id"]);
+      var start_index = Number(cur_obj["startIndex"]);
+      var end_index = Number(cur_obj["endIndex"]);
+
+      meta_data.mesh_map[region_id] = [start_index, end_index];
+    }
+  }
+  
+  if("regionOrders" in json_data)
+  {
+    var all_anim_data = json_data["regionOrders"];
+    for (var anim_name in all_anim_data)
+    {
+        var order_data = all_anim_data[anim_name];
+        var write_order_dict = {};
+
+        for(var i = 0; i < order_data.length; i++)
+        {
+            var switch_dict = order_data[i];
+            var switch_time = Number(switch_dict["switch_time"]);
+            var switch_order = switch_dict["switch_order"];
+
+            write_order_dict[switch_time] = switch_order;
+        }
+
+        meta_data.anim_order_map[anim_name] = write_order_dict;
     }
   }
 
@@ -2814,7 +2852,59 @@ Creature.prototype.InitDefaultData = function()
     this.skin_swap_active = false;
     this.skin_swap_name = "";
     this.final_skin_swap_indices = null;
+    this.final_indices = null;
+    this.final_indices_num = 0;
     this.creature_meta_data = null;
+};
+
+Creature.prototype.hasAnimatedOrder = function(anim_name, real_run_time)
+{
+  if(this.creature_meta_data != null)
+  {
+    return this.creature_meta_data.hasAnimatedOrder(anim_name, real_run_time);
+  }
+
+  return false;
+};
+
+Creature.prototype.UpdateFinalOrderIndices = function(anim_name, real_run_time)
+{
+  var is_animate_order = this.hasAnimatedOrder(anim_name, real_run_time);
+
+  // index re-ordering
+  if (this.creature_meta_data != null)
+  {
+      if (is_animate_order)
+      {
+        this.final_indices_num = this.creature_meta_data.updateIndicesAndPoints(
+          this.final_indices,
+          this.global_indices,
+          this.total_num_indices,
+          anim_name,
+          this.skin_swap_active,
+          real_run_time
+        );
+      }
+    }
+
+    if(this.ShouldSkinSwap() && is_animate_order)
+    {
+      for(var i = 0; i < this.final_indices_num; i++)
+      {
+        this.final_skin_swap_indices[i] = this.final_indices[i];
+      }
+
+      return true;
+    }
+    else if((this.ShouldSkinSwap() == false) && (is_animate_order == false))
+    {
+      for(var i = 0; i < this.total_num_indices; i++)
+      {
+        this.final_indices[i] = this.global_indices[i];
+      }
+    }
+
+    return false;
 };
 
 Creature.prototype.SetMetaData = function(creature_meta_data)
@@ -2986,6 +3076,12 @@ Creature.prototype.LoadFromData = function(load_data)
 
   this.global_indices = CreatureModuleUtils.ReadIntArrayJSON (json_mesh, "indices");
   this.total_num_indices = this.global_indices.length;
+
+  this.final_indices = [];
+  for(var i = 0; i < this.global_indices.length; i++)
+  {
+    this.final_indices.push(this.global_indices[i]);
+  }
 
   this.global_uvs = CreatureModuleUtils.ReadFloatArrayJSON (json_mesh, "uvs");
   
@@ -3266,11 +3362,19 @@ CreatureAnimation.prototype.poseFromCachePts = function(time_in, target_pts, num
 function CreatureMetaData()
 {
   this.skin_swaps = {};
+  this.anim_order_map = {};
+  this.mesh_map = {};
+  this.anim_order_map = {};
 };
 
 CreatureMetaData.prototype.clear = function()
 {
   this.skin_swaps = {};
+  this.anim_order_map = {};
+  this.anim_order_map = {};
+  this.mesh_map = {};
+  this.anim_order_map = {};
+  this.active_skin_swap_ids = new Set();
 };
 
 CreatureMetaData.prototype.buildSkinSwapIndices = function(swap_name, bone_composition)
@@ -3283,6 +3387,7 @@ CreatureMetaData.prototype.buildSkinSwapIndices = function(swap_name, bone_compo
   }
 
   var swap_set = this.skin_swaps[swap_name];
+  this.active_skin_swap_ids = new Set();
   var total_size = 0;
   var regions_map = bone_composition.getRegionsMap();
   for(var region_name in regions_map)
@@ -3291,6 +3396,7 @@ CreatureMetaData.prototype.buildSkinSwapIndices = function(swap_name, bone_compo
     {
       var cur_region = regions_map[region_name];
       total_size += cur_region.getNumIndices();
+      this.active_skin_swap_ids.add(cur_region.getTagId());
     }
   }
 
@@ -3311,6 +3417,122 @@ CreatureMetaData.prototype.buildSkinSwapIndices = function(swap_name, bone_compo
   }
 
   return skin_swap_indices;
+};
+
+CreatureMetaData.prototype.hasAnimatedOrder = function(anim_name, time_in)
+{
+  return (this.sampleOrder(anim_name, time_in) != null);
+};
+
+CreatureMetaData.prototype.sampleOrder = function(anim_name, time_in)
+{
+  if (anim_name in this.anim_order_map)
+  {
+      var order_table = this.anim_order_map[anim_name];
+      if (order_table.length == 0)
+      {
+          return null;
+      }
+
+      var keys_sorted = [];
+      for(curKey in order_table)
+      {
+        keys_sorted.push(curKey);
+      }
+      keys_sorted.sort();
+
+      var sample_time = keys_sorted[0];
+
+      for(var i = 0; i < keys_sorted.length; i++)
+      {
+          var curKey = keys_sorted[i];
+          if (time_in >= curKey)
+          {
+              sample_time = curKey;
+          }
+      }
+
+      return order_table[sample_time];
+  }
+
+  return null;
+};
+
+CreatureMetaData.prototype.updateIndicesAndPoints = function(
+  dst_indices,
+  src_indices,
+  num_indices,
+  anim_name,
+  skin_swap_active,
+  time_in)
+{
+  var has_data = false;
+  var cur_order = this.sampleOrder(anim_name, time_in);
+  if (cur_order != null)
+  {
+      has_data = (cur_order.length > 0);
+  }
+
+  if (has_data)
+  {
+      // Copy new ordering to destination
+      var total_num_write_indices = 0;
+      for (var m = 0; m < cur_order.length; m++)
+      {
+          var region_id = cur_order[m];
+          if ((region_id in this.mesh_map) == false)
+          {
+              // region not found, just copy and return
+              for (var i = 0; i < dst_indices.length; i++)
+              {
+                  dst_indices[i] = src_indices[i];
+              }
+              return num_indices;
+          }
+
+          // Write indices
+          var mesh_data = this.mesh_map[region_id];
+          var num_write_indices = mesh_data[1] - mesh_data[0] + 1;
+
+          if ((total_num_write_indices + num_write_indices) > num_indices)
+          {
+              // overwriting boundaries of array, regions do not match so copy and return
+              for (var i = 0; i < dst_indices.length; i++)
+              {
+                  dst_indices[i] = src_indices[i];
+              }
+              return num_indices;
+          }
+
+          var valid_region = true;
+          if(skin_swap_active)
+          {
+              valid_region = (region_id in this.active_skin_swap_ids);
+          }
+
+          if (valid_region)
+          {
+              for (var i = 0; i < num_write_indices; i++)
+              {
+                  dst_indices[total_num_write_indices + i] = src_indices[mesh_data[0] + i];
+              }
+
+              total_num_write_indices += num_write_indices;
+          }
+      }
+  }
+  else
+  {
+      // Nothing changed, just copy from source
+      for (var i = 0; i < dst_indices.length; i++)
+      {
+          dst_indices[i] = src_indices[i];
+      }
+
+      return num_indices;
+  }
+
+  return total_num_write_indices;
 };
 
 // CreatureManager

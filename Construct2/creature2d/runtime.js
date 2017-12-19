@@ -188,8 +188,38 @@ cr.plugins_.Creature2d = function(runtime)
 			gl.bufferData(gl.ARRAY_BUFFER, this.uvs, gl.DYNAMIC_DRAW);
 			gl.vertexAttribPointer(glw.currentShader.locATex, 2, gl.FLOAT, false, 0, 0);
 		}
+
+		// Update Indices if required
+		var indexBufferLength = this.indices.length;
+		if(this.animateRegionOrder)
+		{
+			var target_creature = this.creature_manager.target_creature;
+			var whichIdxBuffer = target_creature.UpdateFinalOrderIndices(
+				this.creature_manager.active_animation_name, 
+				this.creature_manager.run_time);
+			if(whichIdxBuffer)
+			{
+				// Skin Swap Indices
+				indexBufferLength = target_creature.final_skin_swap_indices.length;
+				for(var j = 0; j < target_creature.final_skin_swap_indices.length; j++)
+				{
+					this.indices[j] = target_creature.final_skin_swap_indices[j];
+				}
+			}
+			else {
+				// Normal Indices
+				for(var j = 0; j < target_creature.final_indices.length; j++)
+				{
+					this.indices[j] = target_creature.final_indices[j];
+				}
+			}
+
+			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this._indexBuffer);
+			gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.indices, gl.DYNAMIC_DRAW);			
+		}
+
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this._indexBuffer);
-		gl.drawElements(gl.TRIANGLES, this.indices.length, gl.UNSIGNED_SHORT, 0);
+		gl.drawElements(gl.TRIANGLES, indexBufferLength, gl.UNSIGNED_SHORT, 0);
 		//c2 post setup
 		// restore c2 index buffer
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, glw.indexBuffer);
@@ -244,6 +274,7 @@ cr.plugins_.Creature2d = function(runtime)
 		this.uvs = new Float32Array(creature.total_num_pts * 2);
 		this.yFlip = 1.0;
 		this.xFlip = 1.0;
+		this.animateRegionOrder = false;
 		
 		this.indices = new Uint16Array(creature.global_indices.length);
 		for(var i = 0; i < this.indices.length; i++)
@@ -302,6 +333,17 @@ cr.plugins_.Creature2d = function(runtime)
 	{
 		this.xFlip = xFlip;
 		this.yFlip = yFlip;
+	};
+
+	Acts.prototype.setAnimateRegionOrder = function(valIn)
+	{
+		var real_val = false;
+		if(valIn > 0)
+		{
+			real_val = true;
+		}
+
+		this.animateRegionOrder = real_val;
 	};
 
 	Acts.prototype.setAnimationStartEndTime = function(animationName, startTime, endTime)

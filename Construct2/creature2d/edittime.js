@@ -112,6 +112,9 @@ AddAction(10, af_none, "SkinSwap", "creature2d", "SkinSwap {10}", "SkinSwap.", "
 
 AddAction(11, af_none, "Disable SkinSwap", "creature2d", "Disable SkinSwap {11}", "Disable SkinSwap.", "disableSkinSwap");
 
+AddNumberParam("animateRegionOrder", "Set Region Order Animation Active (0 inactive, 1 active)", "0");
+AddAction(12, af_none, "Set Animate Region Order Active", "creature2d", "Set Animate Region Order Active {12}", "Set Animate Region Order Active", "setAnimateRegionOrder");
+
 ////////////////////////////////////////
 // Expressions
 
