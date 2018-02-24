@@ -71,7 +71,27 @@
 		
 		var meta_data = CreatureModuleUtils.BuildCreatureMetaData(meta_json);
 		new_creature.SetMetaData(meta_data);
-	
+
+		// Events Callbacks setup ( Shows you how to setup event callbacks. You can either load it in from 
+		// MetaData OR add it manually yourself after the character is loaded )
+		var game_controller = new CreatureGameController(meta_data);
+		game_controller.BuildFrameCallbacks( function(animClipName, name)
+		{
+			// You are given an input animation clip name and the event name
+			// Your job here is to return another function that will be triggered 
+			// when the event fires. Here we just return null but return a valid function
+			// for your own purposes
+			return null;
+		});
+
+		// You can also add in your event trigger manually/procedurally from code like this
+		game_controller.AddFrameCallback("cape", "fireEvent1", 30, 
+			function(eventName, run_time)
+			{
+				console.log("Event callback triggered: " + eventName + " at frame: " + run_time);
+			}
+		);
+
 		// create an new instance of a pixi stage
 		var stage = new PIXI.Stage(0x000000);
 	
@@ -105,8 +125,12 @@
 		var swap_type = 0;
 		function animate() {
 			requestAnimationFrame(animate);
-	
+			
+			// Step the animation
 			new_manager.Update(0.05);
+			// Fire any events
+			game_controller.ProcessCallbacks(new_manager);
+
 			new_creature_renderer.refresh();
 	
 			// render the stage

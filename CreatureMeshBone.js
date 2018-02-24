@@ -1957,6 +1957,7 @@ CreatureModuleUtils.LoadCreatureFlatData = function(input_bytes)
 CreatureModuleUtils.BuildCreatureMetaData = function(json_data)
 {
   var meta_data = new CreatureMetaData();
+  // Skin Swap
   if("skinSwapList" in json_data)
   {
     var skin_swap_obj = json_data["skinSwapList"];
@@ -1974,6 +1975,27 @@ CreatureModuleUtils.BuildCreatureMetaData = function(json_data)
       meta_data.skin_swaps[swap_name] = swap_set;
     }
   }
+
+  // Events Triggers
+  if("eventTriggers" in json_data)
+  {
+    var events_obj = json_data["eventTriggers"];
+    for (var cur_anim_name in events_obj)
+    {
+        var cur_events_map = {};
+        var cur_obj_array = events_obj[cur_anim_name];
+
+        for (var cur_events_obj in cur_obj_array)
+        {
+            var cur_event_name = cur_events_obj["event_name"];
+            var switch_time = Number(cur_events_obj["switch_time"]);
+
+            cur_events_map[switch_time] = cur_event_name;
+        }
+
+        meta_data.anim_events_map[cur_anim_name] = cur_events_map;
+    }
+  }  
 
   return meta_data;
 };
@@ -3388,15 +3410,128 @@ CreatureAnimation.prototype.poseFromCachePts = function(time_in, target_pts, num
         }
 };
 
+// CreatureFrameCallback
+function CreatureFrameCallback()
+{
+  this.callback = null;
+  this.name = "";
+  this.animClipName = "";
+  this.frame = 0;
+  this.triggered = false;
+};
+
+CreatureFrameCallback.prototype.resetCallback = function()
+{
+  this.triggered = false;
+};
+
+CreatureFrameCallback.prototype.tryTrigger = function(frameIn)
+{
+  if(this.triggered)
+  {
+    return false;
+  }
+
+  if (Math.round(frameIn) >= this.frame)
+  {
+    this.triggered = true;
+    return true;
+  }
+
+  return false;
+};
+
+// CreatureGameController
+function CreatureGameController(meta_asset)
+{
+  this.meta_asset = meta_asset;
+  this.event_callbacks = [];
+  this.run_time = 0;
+};
+
+// Builds Event Callbacks from MetaData
+CreatureGameController.prototype.BuildFrameCallbacks = function(assignCallbackFn)
+{
+  if(this.meta_asset == null)
+  {
+    return;
+  }
+
+  for (var cur_key in this.meta_asset.anim_events_map)
+  {
+    var cur_val = this.meta_asset.anim_events_map[cur_key];
+    for (var cur_evt_key in cur_val)
+    {
+      var cur_evt = cur_val[cur_evt_key];
+      var new_callback = new CreatureFrameCallback();
+      new_callback.animClipName = cur_key;
+      new_callback.name = cur_evt;
+      new_callback.frame = Number(cur_evt_key);
+      new_callback.callback = assignCallbackFn(animClipName, name);
+
+      this.event_callbacks.push(new_callback);
+    }
+  }
+};
+
+// Manually adds a new event callback
+CreatureGameController.prototype.AddFrameCallback = function(animClipName, name, frame, callbackFb)
+{
+  var new_callback = new CreatureFrameCallback();
+  new_callback.animClipName = animClipName;
+  new_callback.name = name;
+  new_callback.frame = frame;
+  new_callback.callback = callbackFb;
+
+  this.event_callbacks.push(new_callback);
+};
+
+// Resets the callback triggers, Remember to call this whenever you Switch Animations
+CreatureGameController.prototype.ResetFrameCallbacks = function()
+{
+  for (var cur_key in this.event_callbacks)
+  {
+    var frame_callback = this.event_callbacks[cur_key];
+    frame_callback.resetCallback();
+  }
+};
+
+// Call this after every animation update/timestep of your creatureManager
+CreatureGameController.prototype.ProcessCallbacks = function(creature_manager)
+{
+  var cur_runtime = creature_manager.getActualRuntime();
+  if(cur_runtime < this.run_time)
+  {
+    this.ResetFrameCallbacks();
+  }
+
+  this.run_time = cur_runtime;
+
+  for (var i  = 0; i < this.event_callbacks.length; i++)
+  {
+    var frame_callback = this.event_callbacks[i];
+    if (frame_callback.animClipName == creature_manager.active_animation_name)
+    {
+        var should_trigger = frame_callback.tryTrigger(cur_runtime);
+        if (should_trigger && (frame_callback.callback != null))
+        {
+          frame_callback.callback(frame_callback.name, cur_runtime);
+        }
+    }
+  }
+};
+
 // CreatureMetaData
 function CreatureMetaData()
 {
   this.skin_swaps = {};
+  this.anim_events_map = {};
 };
 
 CreatureMetaData.prototype.clear = function()
 {
   this.skin_swaps = {};
+  this.anim_events_map = {};
 };
 
 CreatureMetaData.prototype.buildSkinSwapIndices = function(swap_name, bone_composition)
@@ -3757,6 +3892,20 @@ CreatureManager.prototype.correctTime = function()
 // Returns the current run time of the animation
 CreatureManager.prototype.getRunTime = function()
 {
+  return this.run_time;
+};
+
+// Returns the true run time taking into account of blending
+CreatureManager.prototype.getActualRuntime = function()
+{
+  if (this.do_auto_blending)
+  {
+      if (this.active_animation_name in this.active_blend_run_times)
+      {
+          return this.active_blend_run_times[this.active_animation_name];
+      }
+  }
+
   return this.run_time;
 };
 
