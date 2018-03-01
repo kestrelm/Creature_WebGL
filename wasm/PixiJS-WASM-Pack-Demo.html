@@ -6,7 +6,7 @@
         <script src="../pixi.js"></script>
         <script src="CreaturePackWASMPixiJSRenderer.js"></script>        
         <!-- This will load the WebAssembly module and run its main. --> 
-        <script src="creaturepack-wasm.js"></script>
+        <script async type="text/javascript" src="creaturepack-wasm.js"></script>
     </head>
     <body>
 
@@ -20,8 +20,9 @@
 	    xhr.send();
 	};
 
-    window.onload = function() {
-        Module.addOnPreMain(function() {
+    var Module = {
+        preRun: [],
+        postRun: (function() {
             var pack_manager = new Module.PackManager();
             console.log("Loaded WebAssembly.");
             loadFile("../raptor_data.creature_pack", function(response) {
@@ -65,8 +66,11 @@
     		    animate();                
     		});		
 
-        });
-    };
+        })
+    };  
+
+    Module.setStatus('Downloading...');
+
     </script>
 
     </body>

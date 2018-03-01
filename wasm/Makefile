@@ -5,7 +5,7 @@ INCLUDES = -I$(CURDIR)
 EOPT = WASM=1 "BINARYEN_METHOD='native-wasm'" ALLOW_MEMORY_GROWTH=1 TOTAL_MEMORY=524288000
 EOPTS = $(addprefix -s $(EMPTY), $(EOPT))	# Add '-s ' to each option
 OBJS = mpcppfiles.o packcppfiles.o
-CXX_OPTS = -std=c++11 -O2 --bind
+CXX_OPTS = -std=c++14 -O2 --bind
 LINKER_OPTS = -O2 --bind
 
 mpcppfiles.o: $(MP_CPP_FILES)
@@ -19,5 +19,5 @@ all: $(OBJS)
 
 # Cleans up object files and build directory
 clean:
-		rm *.o
-		rm *.wast
+		del *.o
+		del *.wast
