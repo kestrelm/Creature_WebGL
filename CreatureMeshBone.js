@@ -4061,10 +4061,10 @@ CreatureManager.prototype.RunUVItemSwap = function()
 
 	for(var cur_action_key in active_swap_actions)
 	{
-		if (cur_action_key in regions_map.count)
+		if (cur_action_key in regions_map)
 		{
 			var swap_tag = active_swap_actions[cur_action_key];
-			var swap_list = this.swap_packets[cur_action_key];
+			var swap_list = swap_packets[cur_action_key];
 			for(var j = 0; j < swap_list.length; j++)
 			{
 				var cur_item = swap_list[j];
