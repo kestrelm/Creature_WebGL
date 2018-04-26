@@ -419,8 +419,8 @@ CreatureHaxeBaseRenderer.prototype.syncRenderData = function()
 			var prev_low_data = prev_clip.timeSamplesMap[prev_clip_info[firstSampleIdx]];
 			var prev_high_data = prev_clip.timeSamplesMap[prev_clip_info[secondSampleIdx]];
 
-			var prev_anim_low_points = data.fileData[prev_low_data.getAnimPointsOffset()];
-			var prev_anim_high_points = data.fileData[prev_high_data.getAnimPointsOffset()];
+			var prev_anim_low_points = this.data.fileData[prev_low_data.getAnimPointsOffset()];
+			var prev_anim_high_points = this.data.fileData[prev_high_data.getAnimPointsOffset()];
 
 			for (var i = 0; i < this.render_points.length; i++) {
 				var active_low_val = active_anim_low_points[i];
