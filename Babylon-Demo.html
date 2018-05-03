@@ -36,7 +36,7 @@
 <script src="flatbuffers.js"></script>
 <script src="CreatureFlatData_generated.js"></script>
 <script src="CreatureMeshBone.js"></script>
-<script src="CreatureRenderer.js"></script>
+<script src="CreatureBabylonRenderer.js"></script>
 
 <script>
 
@@ -78,7 +78,7 @@
   			var data = createScene(canvas, engine);
   			
   			// Create creature renderer
-  			var new_creature_renderer = new CreatureRenderer("CreatureRenderer",
+  			var new_creature_renderer = new CreatureBabylonRenderer("CreatureRenderer",
   															 data.scene, new_manager, 
   															 data.creature_texture);
 

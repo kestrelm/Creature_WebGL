@@ -33,7 +33,7 @@
  * RUNTIMES.
  *****************************************************************************/
 
-function CreatureRenderer(name, scene, manager_in, texture_in)
+function CreatureBabylonRenderer(name, scene, manager_in, texture_in)
 {
 	this.creature_manager = manager_in;
 	this.texture = texture_in;
@@ -46,7 +46,7 @@ function CreatureRenderer(name, scene, manager_in, texture_in)
 };
 
 
-CreatureRenderer.prototype.UpdateData = function()
+CreatureBabylonRenderer.prototype.UpdateData = function()
 {
 	var target_creature = this.creature_manager.target_creature;
 	var first_update = false;
@@ -75,7 +75,6 @@ CreatureRenderer.prototype.UpdateData = function()
 	}
 	
 	var read_pts = target_creature.render_pts;
-//	var read_pts = target_creature.global_pts;
 	var read_uvs = target_creature.global_uvs;
 	
 	var uvIdx = 0;
