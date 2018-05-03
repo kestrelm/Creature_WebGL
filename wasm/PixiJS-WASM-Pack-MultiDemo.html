@@ -4,6 +4,7 @@
         <meta charset="UTF-8" />
         <title>CreaturePack WebAssembly Demo</title>
         <script src="../pixi.js"></script>
+        <script src="CreatureWASMUtils.js"></script>        
         <script src="CreaturePackWASMPixiJSRenderer.js"></script>        
         <!-- This will load the WebAssembly module and run its main. --> 
         <script async type="text/javascript" src="creaturepack-wasm.js"></script>
@@ -69,7 +70,7 @@
             loadFile("../raptor_data.creature_pack", function(response) {
                 var byte_array = new Uint8Array(response);
                 console.log("Loaded CreaturePack Data with size: " + byte_array.byteLength);
-                var load_bytes = CreatureASMUtils.heapBytes(byte_array);
+                var load_bytes = CreatureWASMUtils.heapBytes(byte_array);
                 var pack_loader = pack_manager.addPackLoader("Raptor", load_bytes.byteOffset, byte_array.byteLength);
                 var texture = PIXI.Texture.fromImage("../raptor_img.png");
 

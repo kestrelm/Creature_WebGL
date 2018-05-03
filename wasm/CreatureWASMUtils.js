@@ -32,68 +32,17 @@
  * OUT OF OR IN CONNECTION WITH THE RUNTIMES OR THE USE OR OTHER DEALINGS IN THE
  * RUNTIMES.
  *****************************************************************************/
-
- // CreaturePackRenderer
-function CreaturePackRenderer(manager_in, loader_name_in, texture_in)
+// Utils
+function CreatureWASMUtils()
 {
-	PIXI.mesh.Mesh.call(this, texture_in);
-	
-    this.playerId = manager_in.addPackPlayer(loader_name_in);
-    this.packManager = manager_in;
-	this.texture = texture_in;
-	this.dirty = true;
-	this.blendMode = PIXI.blendModes.NORMAL;
-	this.creatureBoundsMin = new PIXI.Point(0,0);
-	this.creatureBoundsMax = new PIXI.Point(0,0);
-	
-	this.vertices = manager_in.getPlayerPoints(this.playerId);
-	this.uvs = manager_in.getPlayerUVs(this.playerId);
-    
-    var readIndices = manager_in.getPlayerIndices(this.playerId);
-	this.indices = Uint16Array.from(readIndices);
-	
-	this.colors = new Float32Array([1,1,1,1]);
-	
-	this.drawMode = PIXI.mesh.Mesh.DRAW_MODES.TRIANGLES;
+
 };
 
-// constructor
-CreaturePackRenderer.prototype = Object.create(PIXI.mesh.Mesh.prototype);
-CreaturePackRenderer.prototype.constructor = CreaturePackRenderer;
-
-CreaturePackRenderer.prototype.UpdateCreatureBounds = function()
+CreatureWASMUtils.heapBytes = function(typedArray)
 {
-	// update bounds based off world transform matrix
-	var curBounds = this.packManager.getPlayerBounds(this.playerId);
-	this.creatureBoundsMin.set(curBounds[0], curBounds[1]);
-	this.creatureBoundsMax.set(curBounds[2], curBounds[3]);
-	
-	this.worldTransform.apply(this.creatureBoundsMin, this.creatureBoundsMin);	
-	this.worldTransform.apply(this.creatureBoundsMax, this.creatureBoundsMax);				
+	var numBytes = typedArray.length * typedArray.BYTES_PER_ELEMENT;
+	var ptr = Module._malloc(numBytes);
+	var heapBytes = new Uint8Array(Module.HEAPU8.buffer, ptr, numBytes);
+	heapBytes.set(new Uint8Array(typedArray.buffer));
+	return heapBytes;
 };
-
-CreaturePackRenderer.prototype.GetPixelScaling = function(desired_x, desired_y)
-{
-	// compute pixel scaling relative to mesh scaling
-	var curBounds = this.packManager.getPlayerBounds(this.playerId);
-
-    var mesh_size_x = curBounds[2] - curBounds[0];
-    var mesh_size_y = curBounds[3] - curBounds[1];
-
-    var scale_x = 1.0 / mesh_size_x * desired_x;
-    var scale_y = 1.0 / mesh_size_y * desired_y;
-
-    return [scale_x, scale_y];
-};
-
-CreaturePackRenderer.prototype.refresh = function()
-{
-	this.UpdateCreatureBounds();
-	this.dirty = true;
-};
-
-CreaturePackRenderer.prototype.removeFromManager = function()
-{
-    // Call this to remove the player from the manager during destruction to free up memory
-    this.packManager.removePackPlayer(this.playerId)
-}
