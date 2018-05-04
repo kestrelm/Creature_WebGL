@@ -25,7 +25,7 @@ View the Live demo **[here](http://www.kestrelmoon.com/creature/WebDemo/raptor_m
 
 ### WebAssembly Demo
 
-Unleash the power of high performance **Web Assembly** with the new **CreaturePack WebAssembly** runtimes for [PixiJS](http://www.pixijs.com/)!
+Unleash the power of high performance **Web Assembly** with the new **CreaturePack WebAssembly** runtimes!
 
 ![Alt text](https://github.com/kestrelm/Creature_WebGL/blob/master/babylonPack.png)
 The above demo uses advanced **Delta Compression** in CreaturePack to deliver high performance + quality animation with extreme compression ratios! This Raptor animation is **only 230KB in size**!
