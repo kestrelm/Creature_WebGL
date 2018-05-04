@@ -45,8 +45,14 @@ namespace CreaturePack
         // Sets whether the player animation is looping given its handle/id
         bool setPlayerLoop(int handle, bool should_loop);
 
+        // Applies an offset z to each mesh region
+        void applyRegionOffsetsZ(int handle, float offset_z);
+
         // Returns the points of the player given its handle/id
         emscripten::val getPlayerPoints(int handle);
+
+        // Returns the points in 3D of the player given its handle/id
+        emscripten::val getPlayerPoints3D(int handle);
 
         // Returns the colors of the player given its handle/id
         emscripten::val getPlayerColors(int handle);

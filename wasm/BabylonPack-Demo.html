@@ -1,0 +1,181 @@
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>CreaturePack BabylonJS WebAssembly Demo</title>
+        <script src="../babylon.js"></script>
+        <script src="../babylon.gui.min.js"></script>
+        <script src="CreatureWASMUtils.js"></script>        
+        <script src="CreaturePackBabylonWASMRenderer.js"></script>        
+        <!-- This will load the WebAssembly module and run its main. --> 
+		<script async type="text/javascript" src="creaturepack-wasm.js"></script>
+		
+		<style>
+			html, body {
+			  overflow: hidden;
+			  width: 100%;
+			  height: 100%;
+			  margin: 0;
+			  padding: 0;
+			}
+  
+			#renderCanvas {
+			  width: 100%;
+			  height: 100%;
+			  touch-action: none;
+			}
+		</style>
+			  
+    </head>
+    <body>
+
+	<canvas id="renderCanvas"></canvas>
+
+    <script type="text/javascript">
+
+    var loadFile = function (filePath, done) {
+	    var xhr = new XMLHttpRequest();
+	    xhr.onload = function () { return done(this.response); };
+        xhr.open("GET", filePath, true);
+        xhr.responseType = "arraybuffer";
+	    xhr.send();
+    };
+    
+    var createScene = function (canvas, engine, manager_in) {
+        // Now create a basic Babylon Scene object 
+        var scene = new BABYLON.Scene(engine);
+		scene.clearColor = new BABYLON.Color3(0, 0, 0);
+		
+		// Add ground plane
+		{
+			var sourcePlane = new BABYLON.Plane(0, 1, 0, -11);
+	    	sourcePlane.normalize();
+		    var plane = BABYLON.MeshBuilder.CreatePlane("plane", {height:200, width: 150, sourcePlane: sourcePlane, sideOrientation: BABYLON.Mesh.DOUBLESIDE}, scene);
+			plane.receiveShadows = true;
+
+			var planeMat = new BABYLON.StandardMaterial("planeMaterial", scene);
+			planeMat.diffuseColor = new BABYLON.Color3(0.75, 0.75, 0.75);
+			planeMat.specularColor = new BABYLON.Color3(0.1, 0.1, 0.1);
+			planeMat.emissiveColor = new BABYLON.Color3(0.1, .1, .1);
+			planeMat.ambientColor = new BABYLON.Color3(0.5, 0.5, 0.5);
+
+			plane.material = planeMat;
+		}
+
+        // This creates and positions a free camera
+        var camera = new BABYLON.ArcRotateCamera("Camera", 0, 0, 0, new BABYLON.Vector3(0, 0, 0), scene);
+	
+        // This targets the camera to scene origin
+        camera.setPosition(new BABYLON.Vector3(0, 0, -40));
+		//camera.attachControl(canvas, true);
+
+        // This creates a light
+		var light = new BABYLON.PointLight("pointLight", new BABYLON.Vector3(1, 30, -30), scene);
+		light.diffuse = new BABYLON.Color3(1, 1, 1);
+		light.specular = new BABYLON.Color3(1, 1, 1);
+		light.groundColor = new BABYLON.Color3(1, 1, 1);
+
+        // creature
+        var creature_texture = new BABYLON.StandardMaterial("creatureTexture", scene);
+        creature_texture.diffuseTexture = new BABYLON.Texture("../raptorNew.png", scene);
+        creature_texture.diffuseTexture.hasAlpha = true;
+		creature_texture.specularColor = new BABYLON.Color3(0, 0, 0);
+        creature_texture.backFaceCulling = false;
+
+        var creature_renderer = new CreaturePackBabylonRenderer(
+            "CreatureRenderer",
+             scene, 
+             manager_in, 
+             "Raptor",
+			 creature_texture);
+
+		// Add shadows
+		var shadowGenerator = new BABYLON.ShadowGenerator(1024, light);
+	    shadowGenerator.getShadowMap().renderList.push(creature_renderer.renderMesh);
+		shadowGenerator.usePercentageCloserFiltering = true;
+
+		 // GUI
+		var advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+		advancedTexture.renderScale = 1;
+
+		{
+			var text1 = new BABYLON.GUI.TextBlock();
+		    text1.text = "CreaturePack BabylonJS WebAssembly Demo";
+		    text1.color = "yellow";
+			text1.left = "10px";
+			text1.top = "10px";
+			text1.fontSize = 25;
+			text1.textHorizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
+			text1.textVerticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP;
+		    advancedTexture.addControl(text1);    
+		}
+
+		{
+			var text1 = new BABYLON.GUI.TextBlock();
+		    text1.text = "Artwork: Fred Wierum, License: Creative Commons Attribution-Share Alike 4.0 International license";
+		    text1.color = "white";
+			text1.left = "10px";
+			text1.top = "35px";
+			text1.fontSize = 15;
+			//text1.scaleX = 0.5;
+			text1.textHorizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
+			text1.textVerticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP;
+		    advancedTexture.addControl(text1);    
+		}
+				
+        return {
+            "scene":scene,
+            "creature_texture":creature_texture,
+            "creature_renderer":creature_renderer
+        };
+    };
+
+    var Module = {
+        preRun: [],
+        postRun: (function() {
+            var pack_manager = new Module.PackManager();
+            console.log("Loaded WebAssembly.");
+//            loadFile("../raptorNew.creature_pack", function(response) {
+			loadFile("../raptorNew.creature_pack", function(response) {
+                var byte_array = new Uint8Array(response);
+                console.log("Loaded CreaturePack Data with size: " + byte_array.byteLength);
+                var load_bytes = CreatureWASMUtils.heapBytes(byte_array);
+                var pack_loader = pack_manager.addPackLoader("Raptor", load_bytes.byteOffset, byte_array.byteLength);
+                
+                // Start BabylonJS
+      			// Get the canvas element from our HTML above
+      			var canvas = document.getElementById("renderCanvas");
+
+      			// Load the BABYLON 3D engine
+      			var engine = new BABYLON.Engine(canvas, true);
+      			      			
+			  	// Now, call the createScene function that you just finished creating
+				var data = createScene(canvas, engine, pack_manager);  
+				  
+				// Set active animation
+				pack_manager.setPlayerActiveAnimation(data.creature_renderer.playerId, "controlRun");
+
+    			// Register a render loop to repeatedly render the scene
+      			engine.runRenderLoop(function () {
+					pack_manager.stepPlayer(
+						data.creature_renderer.playerId, 1.0);
+
+    				data.creature_renderer.UpdateData();
+    				//new_creature_renderer.renderMesh.scaling = new BABYLON.Vector3(-1, 1, 1);
+    				
+        			data.scene.render();
+      			});
+      			
+      			// Watch for browser/canvas resize events
+      			window.addEventListener("resize", function () {
+        			engine.resize();
+      			});
+
+    		});		
+
+        })
+    };  
+
+    </script>
+
+    </body>
+</html>

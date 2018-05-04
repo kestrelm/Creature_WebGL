@@ -860,8 +860,26 @@ public:
 			}		
 		}
 	}
-    
 
+	void updateRegionOffsetsZ(float offset_z)
+	{
+		auto& mesh_regions_list = data.meshRegionsList;
+		float set_region_z = 0.0f;
+		for (auto cur_region : mesh_regions_list)
+		{
+			auto start_idx = cur_region.first;
+			auto end_idx = cur_region.second;
+
+			float * cur_pts = render_points.get();
+			for (auto i = start_idx; i <= end_idx; i++)
+			{
+				cur_pts[i * 3 + 2] = set_region_z;
+			}
+
+			set_region_z += offset_z;
+		}		
+	}
+    
     CreaturePackLoader& data;
 
     std::shared_ptr<float> render_uvs;

@@ -21,3 +21,4 @@ all: $(OBJS)
 clean:
 		del *.o
 		del *.wast
+		del *.wasm

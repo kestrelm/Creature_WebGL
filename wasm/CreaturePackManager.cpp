@@ -131,8 +131,17 @@ emscripten::val CreaturePack::PackManager::getPlayerPoints(int handle)
 {
     const auto& player = pack_players.at(handle);
     return emscripten::val(emscripten::typed_memory_view(
-        player->getRenderPointsLength(),
+        player->getRender2DPointsLength(),
         player->render_2d_points.get()
+    ));
+}
+
+emscripten::val CreaturePack::PackManager::getPlayerPoints3D(int handle)
+{
+    const auto& player = pack_players.at(handle);
+    return emscripten::val(emscripten::typed_memory_view(
+        player->getRenderPointsLength(),
+        player->render_points.get()
     ));
 }
 
@@ -184,6 +193,12 @@ CreaturePack::PlayerBounds CreaturePack::PackManager::getPlayerBounds(int handle
     return bounds;
 }
 
+void CreaturePack::PackManager::applyRegionOffsetsZ(int handle, float offset_z)
+{
+    const auto& player = pack_players.at(handle);
+    player->updateRegionOffsetsZ(offset_z);
+}
+
 // Binding code
 EMSCRIPTEN_BINDINGS(creaturepack_manager_module) {
     emscripten::value_array<CreaturePack::PlayerBounds>("PlayerBounds")
@@ -204,9 +219,11 @@ EMSCRIPTEN_BINDINGS(creaturepack_manager_module) {
         .function("getPlayerRunTime", &CreaturePack::PackManager::getPlayerRunTime)
         .function("setPlayerLoop", &CreaturePack::PackManager::setPlayerLoop)
         .function("getPlayerPoints", &CreaturePack::PackManager::getPlayerPoints)
+        .function("getPlayerPoints3D", &CreaturePack::PackManager::getPlayerPoints3D)
         .function("getPlayerColors", &CreaturePack::PackManager::getPlayerColors)
         .function("getPlayerUVs", &CreaturePack::PackManager::getPlayerUVs)
         .function("getPlayerIndices", &CreaturePack::PackManager::getPlayerIndices)
         .function("getPlayerBounds", &CreaturePack::PackManager::getPlayerBounds)
+        .function("applyRegionOffsetsZ", &CreaturePack::PackManager::applyRegionOffsetsZ)
         ;
     }
