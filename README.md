@@ -30,7 +30,7 @@ Unleash the power of high performance **Web Assembly** with the new **CreaturePa
 ![Alt text](https://github.com/kestrelm/Creature_WebGL/blob/master/babylonPack.png)
 The above demo uses advanced **Delta Compression** in CreaturePack to deliver high performance + quality animation with extreme compression ratios! This Raptor animation is **only 230KB in size**!
 
-View the Live CreaturePack BabylonJS WebAssembly demo **[here](http://creature.kestrelmoon.com/WebDemo/wasm/BabylonPack-Demo.html)** 
+View the Live CreaturePack BabylonJS WebAssembly demo **[here](https://creature.kestrelmoon.com/WebDemo/wasm/BabylonPack-Demo.html)** 
 
 
 This second demo shows **200 (Not a Typo!!) mesh deforming raptor dinosaurs** running across the screen! The demo is using the **CreaturePack Web** format similar to the JS version to deliver results that have high performance, great quality and yet compact in delivery size. However, with the new **Web Assembly** backend, the playback is even faster, capable of handling huge numbers of characters running live on your web browser. Even on moderately equipped PCs, this demo runs at a fluid 60 FPS. Make sure your browser has been updated to the latest version to take advantage of this exciting runtime.
