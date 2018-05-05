@@ -46,13 +46,14 @@ function CreaturePlayerWidget(
     groundPlaneOn=true, // Shows ground plane or not
     groundPlaneZ=-11, // Ground plane Z position
     shadowsOn=true, // Does character cast shadows
-    bgColor=new BABYLON.Color3(0, 0, 0) // Background color
+    bgColor=new BABYLON.Color3(0, 0, 0), // Background color
 )
 {
     this.canvas = canvas;
     // Load the BABYLON 3D engine
     this.engine = new BABYLON.Engine(canvas, true);
     this.pack_manager = new wasmModule.PackManager();
+    this.readyCB = readyCB;
 
 	// Watch for browser/canvas resize events
     window.addEventListener("resize", function () {
@@ -95,6 +96,12 @@ function CreaturePlayerWidget(
         }
         // Set active animation
         pack_manager.setPlayerActiveAnimation(self_ptr.creature_renderer.playerId, realStartAnim);
+
+        // Call ready callback if specified
+        if(this.readyCB)
+        {
+            this.readyCB();
+        }
 
         // Register a render loop to repeatedly render the scene
         engine.runRenderLoop(function () {
