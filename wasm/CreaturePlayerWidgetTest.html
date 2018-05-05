@@ -1,0 +1,61 @@
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>CreaturePack BabylonJS WebAssembly Widget Demo</title>
+        <script src="../babylon.js"></script>
+        <script src="../babylon.gui.min.js"></script>
+        <script src="CreatureWASMUtils.js"></script>        
+        <script src="CreaturePackBabylonWASMRenderer.js"></script>        
+        <script src="CreaturePlayerWidget.js"></script>        
+        <!-- This will load the WebAssembly module and run its main. --> 
+		<script async type="text/javascript" src="creaturepack-wasm.js"></script>
+		
+		<style>
+			html, body {
+			  overflow: hidden;
+			  width: 100%;
+			  height: 100%;
+			  margin: 0;
+			  padding: 0;
+			}
+  
+			#renderCanvas {
+			  width: 100%;
+			  height: 100%;
+			  touch-action: none;
+			}
+		</style>
+			  
+    </head>
+    <body>
+
+	<canvas id="renderCanvas"></canvas>
+
+    <script type="text/javascript">
+
+    var Module = {
+        preRun: [],
+        postRun: (function() {
+			console.log("Loaded WebAssembly.");
+			var canvas = document.getElementById("renderCanvas");
+			var player_widget = new CreaturePlayerWidget(
+				window,
+				canvas,
+				"../horseman.creature_pack",
+				"../horseman.png",
+				Module,
+				"",
+				true,
+				-40,
+				true,
+				-11,
+				true,
+				new BABYLON.Color3(0, 0, 0)
+			);
+        })
+    };  
+
+    </script>
+
+    </body>
+</html>

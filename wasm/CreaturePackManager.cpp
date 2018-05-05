@@ -102,6 +102,20 @@ bool CreaturePack::PackManager::stepPlayer(int handle, float delta)
     return true;
 }
 
+bool CreaturePack::PackManager::setPlayerRunTime(int handle, float time_in)
+{
+    if(pack_players.count(handle) == 0)
+    {
+        std::cout<<"CreaturePack::PackManager::setPlayerRunTime() - ERROR! Player with handle: " + std::to_string(handle) + " not found!"<<std::endl;
+        return false;
+    }
+
+    const auto& player = pack_players.at(handle);
+    player->setRunTime(time_in);
+    player->syncRenderData();
+    return true;
+}
+
 float CreaturePack::PackManager::getPlayerRunTime(int handle) const
 {
     if(pack_players.count(handle) == 0)
@@ -199,6 +213,62 @@ void CreaturePack::PackManager::applyRegionOffsetsZ(int handle, float offset_z)
     player->updateRegionOffsetsZ(offset_z);
 }
 
+CreaturePack::CreaturePackAnimClip * CreaturePack::PackManager::getAnimClip(int handle, const std::string& name_in)
+{
+    const auto& player = pack_players.at(handle);
+    auto find_iter = player->data.animClipMap.find(name_in);
+    if(find_iter != player->data.animClipMap.end())
+    {
+        return &find_iter->second;
+    }
+
+    return nullptr;
+}
+
+int CreaturePack::PackManager::getActiveAnimStartTime(int handle)
+{
+    const auto& player = pack_players.at(handle);
+    auto cur_clip = getAnimClip(handle, player->activeAnimationName);
+    if(cur_clip)
+    {
+        return cur_clip->startTime;
+    }
+
+    return 0;
+}
+
+int CreaturePack::PackManager::getActiveAnimEndTime(int handle)
+{
+    const auto& player = pack_players.at(handle);
+    auto cur_clip = getAnimClip(handle, player->activeAnimationName);
+    if(cur_clip)
+    {
+        return cur_clip->endTime;
+    }
+
+    return 0;
+}
+
+std::string CreaturePack::PackManager::getActiveAnimName(int handle)
+{
+    const auto& player = pack_players.at(handle);
+    return player->activeAnimationName;
+}
+
+emscripten::val CreaturePack::PackManager::getAllAnimNames(int handle)
+{
+    emscripten::val ret_names = emscripten::val::array();
+    const auto& player = pack_players.at(handle);
+    int i = 0;
+    for(auto& cur_data : player->data.animClipMap)
+    {
+        ret_names.set(i, cur_data.first);
+        i++;
+    }
+
+    return ret_names;
+}
+
 // Binding code
 EMSCRIPTEN_BINDINGS(creaturepack_manager_module) {
     emscripten::value_array<CreaturePack::PlayerBounds>("PlayerBounds")
@@ -217,6 +287,7 @@ EMSCRIPTEN_BINDINGS(creaturepack_manager_module) {
         .function("setPlayerBlendToAnimation", &CreaturePack::PackManager::setPlayerBlendToAnimation)
         .function("stepPlayer", &CreaturePack::PackManager::stepPlayer)
         .function("getPlayerRunTime", &CreaturePack::PackManager::getPlayerRunTime)
+        .function("setPlayerRunTime", &CreaturePack::PackManager::setPlayerRunTime)
         .function("setPlayerLoop", &CreaturePack::PackManager::setPlayerLoop)
         .function("getPlayerPoints", &CreaturePack::PackManager::getPlayerPoints)
         .function("getPlayerPoints3D", &CreaturePack::PackManager::getPlayerPoints3D)
@@ -225,5 +296,9 @@ EMSCRIPTEN_BINDINGS(creaturepack_manager_module) {
         .function("getPlayerIndices", &CreaturePack::PackManager::getPlayerIndices)
         .function("getPlayerBounds", &CreaturePack::PackManager::getPlayerBounds)
         .function("applyRegionOffsetsZ", &CreaturePack::PackManager::applyRegionOffsetsZ)
+        .function("getActiveAnimStartTime", &CreaturePack::PackManager::getActiveAnimStartTime)
+        .function("getActiveAnimEndTime", &CreaturePack::PackManager::getActiveAnimEndTime)
+        .function("getActiveAnimName", &CreaturePack::PackManager::getActiveAnimName)
+        .function("getAllAnimNames", &CreaturePack::PackManager::getAllAnimNames)
         ;
     }

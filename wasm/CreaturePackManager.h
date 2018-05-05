@@ -39,6 +39,9 @@ namespace CreaturePack
         // Steps the player object with a given time delta given its handle/id
         bool stepPlayer(int handle, float delta);
 
+        // Sets the absolute frame/time for the player object's animation
+        bool setPlayerRunTime(int handle, float time_in);
+
         // Returns the current run time of a player object given its handle/id
         float getPlayerRunTime(int handle) const;
 
@@ -65,8 +68,23 @@ namespace CreaturePack
 
         // Returns the bounds of a player given its handle/id
         PlayerBounds getPlayerBounds(int handle);
+
+        // Returns the starting frame/time of the currently active animation
+        int getActiveAnimStartTime(int handle);
+
+        // Returns the ending frame/time of the currently active animation
+        int getActiveAnimEndTime(int handle);
+
+        // Returns the name of the currently active animation        
+        std::string getActiveAnimName(int handle);
+
+        // Returns a list of available animation clip names
+        emscripten::val getAllAnimNames(int handle);
         
     protected:
+
+        CreaturePack::CreaturePackAnimClip * getAnimClip(int handle, const std::string& name_in);
+
         std::unordered_map<std::string, std::shared_ptr<CreaturePackLoader>> pack_loaders;
         std::unordered_map<int, std::shared_ptr<CreaturePackPlayer>> pack_players;
         int pack_id_gen;

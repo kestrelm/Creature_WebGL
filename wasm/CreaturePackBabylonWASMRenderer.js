@@ -50,6 +50,31 @@ function CreaturePackBabylonRenderer(name, scene, manager_in, loader_name_in, te
 	this.InitData();
 };
 
+CreaturePackBabylonRenderer.prototype.GetRuntime = function()
+{
+	return this.packManager.getPlayerRunTime(this.playerId);
+};
+
+CreaturePackBabylonRenderer.prototype.SetRuntime = function(time_in)
+{
+	this.packManager.setPlayerRunTime(this.playerId, time_in);
+};
+
+CreaturePackBabylonRenderer.prototype.GetActiveAnimName = function()
+{
+	return this.packManager.getActiveAnimName(this.playerId);
+};
+
+CreaturePackBabylonRenderer.prototype.GetActiveAnimStartTime = function()
+{
+	return this.packManager.getActiveAnimStartTime(this.playerId);
+};
+
+CreaturePackBabylonRenderer.prototype.GetActiveAnimEndTime = function()
+{
+	return this.packManager.getActiveAnimEndTime(this.playerId);
+};
+
 CreaturePackBabylonRenderer.prototype.InitData = function()
 {
 	this.vertices = this.packManager.getPlayerPoints3D(this.playerId);
