@@ -47,6 +47,7 @@ function CreaturePlayerWidget(
     groundPlaneZ=-11, // Ground plane Z position
     shadowsOn=true, // Does character cast shadows
     bgColor=new BABYLON.Color3(0, 0, 0), // Background color
+    readyCB=null // An optional callback function that is triggered when this widget is finished loading
 )
 {
     this.canvas = canvas;
@@ -57,7 +58,7 @@ function CreaturePlayerWidget(
 
 	// Watch for browser/canvas resize events
     window.addEventListener("resize", function () {
-        player_widget.engine.resize();
+        this.engine.resize();
     });
 
     this.loadFile(charAssetPath, function(response, self_ptr) {
