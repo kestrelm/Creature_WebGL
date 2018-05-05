@@ -219,6 +219,7 @@ CreaturePlayerWidget.prototype.createScene = function(
     // GUI
     if(showPlayer) {
         var advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+        this.screenPanel = advancedTexture;
         
         var baseRect = new BABYLON.GUI.Rectangle();
         baseRect.width = "300px";
