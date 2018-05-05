@@ -101,5 +101,7 @@ The **CreaturePlayerWidget** constructor has the following options:
 
 - **bgColor:** Background color
 
+- **readyCB** An optional callback function that is triggered when this widget is finished loading
+
 
     
