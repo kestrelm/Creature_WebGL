@@ -38,3 +38,9 @@ This second demo shows **200 (Not a Typo!!) mesh deforming raptor dinosaurs** ru
 View the Live CreaturePack WebAsseambly demo **[here](https://creature.kestrelmoon.com/WebDemo/wasm/PixiJS-WASM-Pack-MultiDemo.html)** :)
 
 Read the writeup on the WebAssembly runtime **[here](<https://medium.com/@kestrelm/creaturepack-high-performance-2d-webgl-character-animation-with-webassembly-72c436bec86c>)**
+
+### Share your animations easily with the CreaturePack WebAssembly Widget
+
+![Alt text](https://github.com/kestrelm/Creature_WebGL/blob/master/packPlayer.png)
+
+The **CreaturePack WebAssembly Widget** allows you to easily share your exported Creature animations on your own personal webpage! The rendering core uses the powerful [**BabylonJS 3D WebGL Engine**](https://www.babylonjs.com/). This allows for beautiful rendering effects, including high quality soft-shadows and real-time 3D lighting. Head over to the **WebAssembly** folder for more info [**here**](https://github.com/kestrelm/Creature_WebGL/tree/master/wasm).
