@@ -35,18 +35,18 @@
 
  // CreaturePlayerWidget
 function CreaturePlayerWidget(
-    window,
-    canvas, 
-    charAssetPath,
-    charImgPath, 
-    wasmModule, 
-    startAnim="",
-    showPlayer=true,
-    camPosZ=-40,
-    groundPlaneOn=true,
-    groundPlaneZ=-11,
-    shadowsOn=true,
-    bgColor=new BABYLON.Color3(0, 0, 0)
+    window, // webpage window object
+    canvas, // the canvas object to start the rendering session
+    charAssetPath, // path to your CreaturePack Asset
+    charImgPath,  // path to your character texture atlas png
+    wasmModule, // the CreaturePack WASM Module object
+    startAnim="", // If not empty, will use the specified animation starting out
+    showPlayer=true, // Show the player widget object
+    camPosZ=-40, // Camera Z position
+    groundPlaneOn=true, // Shows ground plane or not
+    groundPlaneZ=-11, // Ground plane Z position
+    shadowsOn=true, // Does character cast shadows
+    bgColor=new BABYLON.Color3(0, 0, 0) // Background color
 )
 {
     this.canvas = canvas;
