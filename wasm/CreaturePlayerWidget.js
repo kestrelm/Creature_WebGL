@@ -56,10 +56,11 @@ function CreaturePlayerWidget(
     this.pack_manager = new wasmModule.PackManager();
     this.readyCB = readyCB;
 
-	// Watch for browser/canvas resize events
+    // Watch for browser/canvas resize events
+    var cur_engine = this.engine;
     window.addEventListener("resize", function () {
-        this.engine.resize();
-    });
+        cur_engine.resize();
+    }.bind(cur_engine));
 
     this.loadFile(charAssetPath, function(response, self_ptr) {
         pack_manager = self_ptr.pack_manager;
@@ -99,9 +100,9 @@ function CreaturePlayerWidget(
         pack_manager.setPlayerActiveAnimation(self_ptr.creature_renderer.playerId, realStartAnim);
 
         // Call ready callback if specified
-        if(this.readyCB)
+        if(self_ptr.readyCB)
         {
-            this.readyCB();
+            self_ptr.readyCB();
         }
 
         // Register a render loop to repeatedly render the scene
