@@ -57,6 +57,7 @@ function CreaturePlayerWidget(
     this.pack_manager = new wasmModule.PackManager();
     this.readyCB = readyCB;
     this.draw_cntdown = 0;
+    this.module = wasmModule;
 
     // Watch for browser/canvas resize events
     var cur_engine = this.engine;
@@ -68,7 +69,7 @@ function CreaturePlayerWidget(
         pack_manager = self_ptr.pack_manager;
         var byte_array = new Uint8Array(response);
         console.log("Loaded CreaturePack Data with size: " + byte_array.byteLength);
-        var load_bytes = CreatureWASMUtils.heapBytes(byte_array);        
+        var load_bytes = CreatureWASMUtils.heapBytes(self_ptr.module, byte_array);        
         var pack_loader = pack_manager.addPackLoader("Character", load_bytes.byteOffset, byte_array.byteLength);
         var engine = self_ptr.engine;
         

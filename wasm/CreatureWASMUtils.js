@@ -38,11 +38,11 @@ function CreatureWASMUtils()
 
 };
 
-CreatureWASMUtils.heapBytes = function(typedArray)
+CreatureWASMUtils.heapBytes = function(wasmModule, typedArray)
 {
 	var numBytes = typedArray.length * typedArray.BYTES_PER_ELEMENT;
 	var ptr = Module._malloc(numBytes);
-	var heapBytes = new Uint8Array(Module.HEAPU8.buffer, ptr, numBytes);
+	var heapBytes = new Uint8Array(wasmModule.HEAPU8.buffer, ptr, numBytes);
 	heapBytes.set(new Uint8Array(typedArray.buffer));
 	return heapBytes;
 };
