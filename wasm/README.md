@@ -103,5 +103,7 @@ The **CreaturePlayerWidget** constructor has the following options:
 
 - **readyCB** An optional callback function that is triggered when this widget is finished loading
 
+- **playOnStart** Whether the animation plays when the widget is loaded
+
 
     

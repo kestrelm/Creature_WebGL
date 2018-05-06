@@ -47,7 +47,8 @@ function CreaturePlayerWidget(
     groundPlaneZ=-11, // Ground plane Z position
     shadowsOn=true, // Does character cast shadows
     bgColor=new BABYLON.Color3(0, 0, 0), // Background color
-    readyCB=null // An optional callback function that is triggered when this widget is finished loading
+    readyCB=null, // An optional callback function that is triggered when this widget is finished loading
+    playOnStart=true // Whether the animation plays when the widget is loaded
 )
 {
     this.canvas = canvas;
@@ -55,6 +56,7 @@ function CreaturePlayerWidget(
     this.engine = new BABYLON.Engine(canvas, true);
     this.pack_manager = new wasmModule.PackManager();
     this.readyCB = readyCB;
+    this.draw_cntdown = 0;
 
     // Watch for browser/canvas resize events
     var cur_engine = this.engine;
@@ -82,7 +84,8 @@ function CreaturePlayerWidget(
             groundPlaneOn,
             groundPlaneZ,
             shadowsOn,
-            bgColor
+            bgColor,
+            playOnStart
         );
         
         // Determine starting animation
@@ -111,11 +114,18 @@ function CreaturePlayerWidget(
                 pack_manager.stepPlayer(
                     self_ptr.creature_renderer.playerId, 1.0);
             }
-
-            self_ptr.creature_renderer.UpdateData();
-            self_ptr.updateControls();
-
-            self_ptr.scene.render();
+            
+            if(self_ptr.playing || (self_ptr.draw_cntdown > 0))
+            {
+                self_ptr.creature_renderer.UpdateData();
+                self_ptr.updateControls();    
+                self_ptr.scene.render();
+                
+                if(self_ptr.draw_cntdown > 0)
+                {
+                    self_ptr.draw_cntdown--;
+                }
+            }
         })
     });
 }
@@ -151,6 +161,11 @@ CreaturePlayerWidget.prototype.updateControls = function()
     }
 };
 
+CreaturePlayerWidget.prototype.oneShotDraw = function()
+{
+    this.draw_cntdown = 5;
+}
+
 CreaturePlayerWidget.prototype.createScene = function(
     canvas, 
     engine,
@@ -162,7 +177,8 @@ CreaturePlayerWidget.prototype.createScene = function(
     groundPlaneOn,
     groundPlaneZ,
     shadowsOn,
-    bgColor) 
+    bgColor,
+    playOnStart) 
 {
     // Now create a basic Babylon Scene object 
     var scene = new BABYLON.Scene(engine);
@@ -224,7 +240,7 @@ CreaturePlayerWidget.prototype.createScene = function(
         this.shadowGenerator = shadowGenerator;
     }
 
-    this.playing = true;
+    this.playing = playOnStart;
     // GUI
     if(showPlayer) {
         var advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
@@ -279,6 +295,7 @@ CreaturePlayerWidget.prototype.createScene = function(
             pack_manager.setPlayerActiveAnimation(self_ptr.creature_renderer.playerId, new_anim);
             pack_manager.stepPlayer(self_ptr.creature_renderer.playerId, 0.0);
             self_ptr.animClipBtn.children[0].text = new_anim;
+            self_ptr.oneShotDraw();
         }.bind(self_ptr));
 
         subpanel.addControl(animClipBtn);    
@@ -291,7 +308,7 @@ CreaturePlayerWidget.prototype.createScene = function(
         subpanel.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_CENTER;
     	panel.addControl(subpanel);    
     	
-    	var playBtn = BABYLON.GUI.Button.CreateSimpleButton("btn", "⏸️");
+    	var playBtn = BABYLON.GUI.Button.CreateSimpleButton("btn", this.playing ? "⏸️" : "▶️");
         playBtn.width = "25px";
         playBtn.height = "25px";
         playBtn.color = "white";
@@ -306,6 +323,7 @@ CreaturePlayerWidget.prototype.createScene = function(
             else {
                 self_ptr.playBtn.children[0].text = "▶️";
             }
+            self_ptr.oneShotDraw();
         }.bind(self_ptr));
 
         subpanel.addControl(playBtn);     
@@ -333,6 +351,7 @@ CreaturePlayerWidget.prototype.createScene = function(
                 var setVal = Math.round(curFraction * (curEndTime - curStartTime) + curStartTime);
                         
                 self_ptr.creature_renderer.SetRuntime(setVal);
+                self_ptr.oneShotDraw();
             }
         }.bind(self_ptr));
 
@@ -353,4 +372,10 @@ CreaturePlayerWidget.prototype.createScene = function(
     else {
         this.hasPlayer = false;
     }
+
+    // Initialise character on first frame
+    manager_in.stepPlayer(
+        this.creature_renderer.playerId, 0);
+    this.creature_renderer.UpdateData();
+    this.oneShotDraw();
 };
