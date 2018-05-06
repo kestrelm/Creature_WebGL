@@ -41,7 +41,7 @@ function CreatureWASMUtils()
 CreatureWASMUtils.heapBytes = function(wasmModule, typedArray)
 {
 	var numBytes = typedArray.length * typedArray.BYTES_PER_ELEMENT;
-	var ptr = Module._malloc(numBytes);
+	var ptr = wasmModule._malloc(numBytes);
 	var heapBytes = new Uint8Array(wasmModule.HEAPU8.buffer, ptr, numBytes);
 	heapBytes.set(new Uint8Array(typedArray.buffer));
 	return heapBytes;
