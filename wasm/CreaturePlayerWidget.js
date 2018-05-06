@@ -58,6 +58,7 @@ function CreaturePlayerWidget(
     this.readyCB = readyCB;
     this.draw_cntdown = 0;
     this.module = wasmModule;
+    this.char_name = charAssetPath;
 
     // Watch for browser/canvas resize events
     var cur_engine = this.engine;
@@ -66,11 +67,11 @@ function CreaturePlayerWidget(
     }.bind(cur_engine));
 
     this.loadFile(charAssetPath, function(response, self_ptr) {
-        pack_manager = self_ptr.pack_manager;
+        var pack_manager = self_ptr.pack_manager;
         var byte_array = new Uint8Array(response);
         console.log("Loaded CreaturePack Data with size: " + byte_array.byteLength);
         var load_bytes = CreatureWASMUtils.heapBytes(self_ptr.module, byte_array);        
-        var pack_loader = pack_manager.addPackLoader("Character", load_bytes.byteOffset, byte_array.byteLength);
+        var pack_loader = pack_manager.addPackLoader(self_ptr.char_name, load_bytes.byteOffset, byte_array.byteLength);
         var engine = self_ptr.engine;
         
         // Now, call the createScene function that you just finished creating
@@ -78,7 +79,7 @@ function CreaturePlayerWidget(
             canvas, 
             engine,
             pack_manager, 
-            "Character", 
+            self_ptr.char_name, 
             charImgPath, 
             showPlayer,
             camPosZ,
@@ -112,7 +113,7 @@ function CreaturePlayerWidget(
         // Register a render loop to repeatedly render the scene
         engine.runRenderLoop(function () {
             if(self_ptr.playing) {
-                pack_manager.stepPlayer(
+                self_ptr.pack_manager.stepPlayer(
                     self_ptr.creature_renderer.playerId, 1.0);
             }
             
@@ -127,7 +128,7 @@ function CreaturePlayerWidget(
                     self_ptr.draw_cntdown--;
                 }
             }
-        })
+        }.bind(self_ptr))
     });
 }
 
@@ -164,7 +165,7 @@ CreaturePlayerWidget.prototype.updateControls = function()
 
 CreaturePlayerWidget.prototype.oneShotDraw = function()
 {
-    this.draw_cntdown = 5;
+    this.draw_cntdown = 30;
 }
 
 CreaturePlayerWidget.prototype.createScene = function(
@@ -244,7 +245,7 @@ CreaturePlayerWidget.prototype.createScene = function(
     this.playing = playOnStart;
     // GUI
     if(showPlayer) {
-        var advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+        var advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI", true, this.scene);
         this.screenPanel = advancedTexture;
         
         var baseRect = new BABYLON.GUI.Rectangle();
