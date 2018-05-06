@@ -70,7 +70,7 @@
             loadFile("../raptor_data.creature_pack", function(response) {
                 var byte_array = new Uint8Array(response);
                 console.log("Loaded CreaturePack Data with size: " + byte_array.byteLength);
-                var load_bytes = CreatureWASMUtils.heapBytes(byte_array);
+                var load_bytes = CreatureWASMUtils.heapBytes(Module, byte_array);
                 var pack_loader = pack_manager.addPackLoader("Raptor", load_bytes.byteOffset, byte_array.byteLength);
                 var texture = PIXI.Texture.fromImage("../raptor_img.png");
 

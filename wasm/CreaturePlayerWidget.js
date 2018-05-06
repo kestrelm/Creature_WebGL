@@ -223,6 +223,7 @@ CreaturePlayerWidget.prototype.createScene = function(
     var creature_texture = new BABYLON.StandardMaterial("creatureTexture", scene);
     creature_texture.diffuseTexture = new BABYLON.Texture(char_img_path, scene);
     creature_texture.diffuseTexture.hasAlpha = true;
+    creature_texture.emissiveTexture = new BABYLON.Texture(char_img_path, scene);
 	creature_texture.specularColor = new BABYLON.Color3(0, 0, 0);
     creature_texture.backFaceCulling = false;
 
