@@ -7,8 +7,6 @@
         <script src="CreatureWASMUtils.js"></script>        
         <script src="CreaturePackBabylonWASMRenderer.js"></script>        
         <script src="CreaturePlayerWidget.js"></script>        
-        <!-- This will load the WebAssembly module and run its main. --> 
-		<script async type="text/javascript" src="creaturepack-wasm.js"></script>
 		
 		<style>
 			html, body {
@@ -30,6 +28,9 @@
     <body>
 
 	<canvas id="renderCanvas"></canvas>
+
+    <!-- This will load the WebAssembly module and run its main. --> 
+	<script async type="text/javascript" src="creaturepack-wasm.js"></script>
 
     <script type="text/javascript">
 

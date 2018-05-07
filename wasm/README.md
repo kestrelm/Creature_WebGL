@@ -19,8 +19,7 @@ Because the animation engine uses the **CreaturePack WebAssembly Runtime**, user
         <script src="https://raw.githubusercontent.com/kestrelm/Creature_WebGL/master/babylon.js"></script>
         <script src="https://raw.githubusercontent.com/kestrelm/Creature_WebGL/master/babylon.gui.min.js"></script>
         <script src="https://raw.githubusercontent.com/kestrelm/Creature_WebGL/master/wasm/CreatureWASMUtils.js"></script>        
-        <script src="https://raw.githubusercontent.com/kestrelm/Creature_WebGL/master/wasm/CreaturePackBabylonWASMRenderer.js"></script>        
-        <script src="https://raw.githubusercontent.com/kestrelm/Creature_WebGL/master/wasm/CreaturePlayerWidget.js"></script>      
+        <script src="https://raw.githubusercontent.com/kestrelm/Creature_WebGL/master/wasm/CreaturePackBabylonWASMRenderer.js"></script>   <script src="https://raw.githubusercontent.com/kestrelm/Creature_WebGL/master/wasm/CreaturePlayerWidget.js"></script>      
 
 
 3. Now define your rendering canvas object in you **style** tag section:
@@ -44,6 +43,9 @@ Because the animation engine uses the **CreaturePack WebAssembly Runtime**, user
         <canvas id="renderCanvas"></canvas>
 
 4.  In your main webpage's **script** section, create the **CreaturePlayerWidget**:
+
+	    <!-- This will load the WebAssembly module and run its main. --> 
+		<script async type="text/javascript" src="creaturepack-wasm.js"></script>
 
         <script type="text/javascript">
 
