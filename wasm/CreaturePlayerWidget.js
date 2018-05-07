@@ -48,7 +48,8 @@ function CreaturePlayerWidget(
     shadowsOn=true, // Does character cast shadows
     bgColor=new BABYLON.Color3(0, 0, 0), // Background color
     readyCB=null, // An optional callback function that is triggered when this widget is finished loading
-    playOnStart=true // Whether the animation plays when the widget is loaded
+    playOnStart=true, // Whether the animation plays when the widget is loaded
+    offsetPos=new BABYLON.Vector3(0,0,0) // displacement offset position
 )
 {
     this.canvas = canvas;
@@ -87,7 +88,8 @@ function CreaturePlayerWidget(
             groundPlaneZ,
             shadowsOn,
             bgColor,
-            playOnStart
+            playOnStart,
+            offsetPos
         );
         
         // Determine starting animation
@@ -134,8 +136,8 @@ function CreaturePlayerWidget(
 
 CreaturePlayerWidget.prototype.loadFile = function (filePath, done) {
     var xhr = new XMLHttpRequest();
-    var self_ptr = this;
-    xhr.onload = function () { return done(this.response, self_ptr); };
+    var self_obj = this;
+    xhr.onload = function () { return done(this.response, self_obj); };
     xhr.open("GET", filePath, true);
     xhr.responseType = "arraybuffer";
     xhr.send();
@@ -180,7 +182,8 @@ CreaturePlayerWidget.prototype.createScene = function(
     groundPlaneZ,
     shadowsOn,
     bgColor,
-    playOnStart) 
+    playOnStart,
+    offsetPos) 
 {
     // Now create a basic Babylon Scene object 
     var scene = new BABYLON.Scene(engine);
@@ -207,10 +210,10 @@ CreaturePlayerWidget.prototype.createScene = function(
 	}
 
     // This creates and positions a free camera
-    var camera = new BABYLON.ArcRotateCamera("Camera", 0, 0, 0, new BABYLON.Vector3(0, 0, 0), scene);
+    var camera = new BABYLON.ArcRotateCamera("Camera", 0, 0, 0, new BABYLON.Vector3(offsetPos.x, offsetPos.y, offsetPos.z), scene);
     this.camera = camera;
     // This targets the camera to scene origin
-    camera.setPosition(new BABYLON.Vector3(0, 0, camPosZ));
+    camera.setPosition(new BABYLON.Vector3(offsetPos.x, offsetPos.y, camPosZ));
 	//camera.attachControl(canvas, true);
 
     // This creates a light
