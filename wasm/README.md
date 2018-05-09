@@ -14,14 +14,24 @@ Because the animation engine uses the **CreaturePack WebAssembly Runtime**, user
 
 1. After you export out your Creature animation ( **Game Engine Export** ), open up your folder and copy over the **CreaturePack** + **Character Image Atlas** files onto your web hosting folder
 
+Here are the files you need: (Copy them from the Github repository into your web hosting folder):
+
+- babylon.js
+- babylon.gui.min.js
+- CreatureWASMUtils.js
+- CreaturePackBabylonWASMRenderer.js
+- CreaturePlayerWidget.js
+- creaturepack-wasm.js
+- creaturepack-wasm.wasm
+
+
 2. At the top of your webpage, make sure you include the following libraries:
 
-        <script src="https://raw.githubusercontent.com/kestrelm/Creature_WebGL/master/babylon.js"></script>
-        <script src="https://raw.githubusercontent.com/kestrelm/Creature_WebGL/master/babylon.gui.min.js"></script>
-        <script src="https://raw.githubusercontent.com/kestrelm/Creature_WebGL/master/wasm/CreatureWASMUtils.js"></script>        
-        <script src="https://raw.githubusercontent.com/kestrelm/Creature_WebGL/master/wasm/CreaturePackBabylonWASMRenderer.js"></script> 
-		
-		<script src="https://raw.githubusercontent.com/kestrelm/Creature_WebGL/master/wasm/CreaturePlayerWidget.js"></script>      
+        <script src="babylon.js"></script>
+        <script src="babylon.gui.min.js"></script>
+        <script src="CreatureWASMUtils.js"></script>        
+        <script src="CreaturePackBabylonWASMRenderer.js"></script> 
+		<script src="CreaturePlayerWidget.js"></script>      
 
 
 3. Now define your rendering canvas object in you **style** tag section:

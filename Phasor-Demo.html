@@ -30,8 +30,8 @@
         var creaturePhasorObject2 = null;
 
         function preload () {
-            game.load.text('iceJSON', 'iceAnchorExport_character_data.json');
-            //game.load.binary('succBin', 'succ_data.bytes', binaryLoadCallback, this);
+            game.load.text('iceJSON', 'iceDemonExport_character_data.json');
+			//game.load.binary('iceBin', 'iceDemonExport_character_data.bytes', binaryLoadCallback, this);
              
             // create a texture from an image path            
 			//game.load.image('succTexture', 'debug3Export_character_img.png');
@@ -57,8 +57,8 @@
 			initDebugging();
             
             // Core Creature Objects
-			var actual_data = JSON.parse(game.cache.getText('iceJSON'));
-			//var actual_data = CreatureModuleUtils.LoadCreatureFlatData(game.cache.getBinary('succBin'));
+			var actual_data = JSON.parse(game.cache.getText('iceJSON').slice(0)); // Make a copy/clone of the input JSON string
+			//var actual_data = CreatureModuleUtils.LoadCreatureFlatData(game.cache.getBinary('iceBin').slice(0));
 			
 			new_creature = new Creature(actual_data, false);
 			//new_creature.anchor_points_active = false;
