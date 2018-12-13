@@ -36,7 +36,7 @@
 
     var xobj = new XMLHttpRequest();
         xobj.overrideMimeType("application/json");
-	xobj.open('GET', 'debug3Export_character_data.json', true); // Replace 'my_data' with the path to your file
+	xobj.open('GET', 'fox0x.json', true); // Replace 'my_data' with the path to your file
 	xobj.onreadystatechange = function () {
           if (xobj.readyState == 4 && xobj.status == "200") {
             // Required use of an anonymous callback as .open will NOT return a value but simply returns undefined in asynchronous mode
@@ -70,13 +70,13 @@
 				
 				new_creature = new Creature(actual_JSON, false);
 			
-				var new_animation_1 = new CreatureAnimation(actual_JSON, "idle", false);
-				var new_animation_2 = new CreatureAnimation(actual_JSON, "back", false);
+				var new_animation_1 = new CreatureAnimation(actual_JSON, "default", false);
+				var new_animation_2 = new CreatureAnimation(actual_JSON, "run", false);
 			
 				new_manager = new CreatureManager(new_creature);
 				new_manager.AddAnimation(new_animation_1);
 				new_manager.AddAnimation(new_animation_2);
-				new_manager.SetActiveAnimationName("idle", false);
+				new_manager.SetActiveAnimationName("default", false);
 				new_manager.SetShouldLoop(true);
 				new_manager.SetIsPlaying(true);
 				new_manager.RunAtTime(0);
@@ -84,7 +84,7 @@
 
 			
 				//var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-				var texture = new THREE.TextureLoader().load("debug3Export_character_img.png");
+				var texture = new THREE.TextureLoader().load("fox.png");
 				var material = new THREE.MeshBasicMaterial({
 	        		map: texture,
 	        		transparent: true,
