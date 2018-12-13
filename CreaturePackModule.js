@@ -171,6 +171,11 @@ function CreaturePackLoader(bytesIn)
 	this.animClipMap = {};
 	this.headerList = [];
 	this.animPairsOffsetList = [];
+
+	this.dMinX = 0.0;
+	this.dMinY = 0.0;
+	this.dMaxX = 0.0;
+	this.dMaxY = 0.0;
 	
 	this.fileData = msgpack.decode(bytesIn);
 	this.headerList = this.fileData[this.getBaseOffset()];
@@ -184,6 +189,9 @@ function CreaturePackLoader(bytesIn)
 	this.updateIndices(this.getBaseIndicesOffset());
 	this.updatePoints(this.getBasePointsOffset());
 	this.updateUVs(this.getBaseUvsOffset());
+	
+	this.fillDeformRanges();
+	this.finalAllPointSamples();
 
 	// init Animation Clip Map
 	for (var i = 0; i < this.getAnimationNum(); i++) {
@@ -240,6 +248,114 @@ CreaturePackLoader.prototype.getAnimationNum = function() {
 	}
 
 	return sum;
+};
+
+CreaturePackLoader.prototype.hasDeformCompress = function() {
+	for (var i = 0; i < this.headerList.length; i++)
+	{
+		if (this.headerList[i] == "deform_comp1")
+		{
+			return "deform_comp1";
+		}
+		else if (this.headerList[i] == "deform_comp2")
+		{
+			return "deform_comp2";
+		}
+		else if (this.headerList[i] == "deform_comp1_1")
+		{
+			return "deform_comp1_1";
+		}
+	}
+
+	return "";
+};
+
+CreaturePackLoader.prototype.fillDeformRanges = function()
+{
+	if (this.hasDeformCompress() != "")
+	{
+		var cur_ranges_offset = this.getAnimationOffsets(this.getAnimationNum());
+		var cur_ranges = this.fileData[cur_ranges_offset[0]];
+		this.dMinX = cur_ranges[0];
+		this.dMinY = cur_ranges[1];
+		this.dMaxX = cur_ranges[2];
+		this.dMaxY = cur_ranges[3];
+	}
+};
+
+CreaturePackLoader.prototype.finalAllPointSamples = function()
+{
+	var deformCompressType = this.hasDeformCompress();
+	if (deformCompressType == "")
+	{
+		return;
+	}
+
+	for (var i = 0; i < this.getAnimationNum(); i++)
+	{
+		var curOffsetPair = this.getAnimationOffsets(i);
+
+		var animName = this.fileData[curOffsetPair[0]];
+		var k = curOffsetPair[0];
+		k++;
+
+		while (k < curOffsetPair[1])
+		{
+			var pts_raw_array = this.fileData[k + 1];
+			var pts_raw_byte_array = this.fileData[k + 1];
+			var raw_num = pts_raw_array.byteLength;
+			var pts_dataview = new DataView(pts_raw_byte_array);
+
+			if (deformCompressType == "deform_comp2")
+			{
+				raw_num = pts_raw_byte_array.byteLength;
+			}
+			else if (deformCompressType == "deform_comp1_1")
+			{
+				raw_num = pts_raw_byte_array.byteLength / 2;
+			}
+
+			var final_pts_array = new Array(raw_num);			
+			for (var m = 0; m < raw_num; m++)
+			{
+				var bucketVal = 0;
+				var numBuckets = 0;
+				if (deformCompressType == "deform_comp1")
+				{
+					bucketVal = pts_raw_array[m];
+					numBuckets = 65535;
+				}
+				else if (deformCompressType == "deform_comp2")
+				{
+					bucketVal = pts_dataview.getUint8(m);
+					numBuckets = 255;
+				}
+				else if (deformCompressType == "deform_comp1_1")
+				{
+					bucketVal = pts_dataview.getUint16(m * 2, true);
+					numBuckets = 65535;
+				}
+
+				var setVal = 0.0;
+				if (m % 2 == 0)
+				{
+					setVal = (bucketVal / numBuckets * (this.dMaxX - this.dMinX)) + this.dMinX;
+					setVal += this.points[m];
+				}
+				else
+				{
+					setVal = (bucketVal / numBuckets * (this.dMaxY - this.dMinY)) + this.dMinY;
+					setVal += this.points[m];
+				}
+
+				final_pts_array[m] = setVal;
+			}
+
+			this.fileData[k + 1] = final_pts_array;
+
+			k += 4;
+		}
+	}
 };
 
 CreaturePackLoader.prototype.getAnimationOffsets = function(idx)

@@ -21,11 +21,11 @@
 	};
 
     window.onload = function() {
-        loadFile("raptor_data.creature_pack", function(response) {
+        loadFile("fox2x.creature_pack", function(response) {
             var byte_array = new Uint8Array(response);
             console.log("Loaded CreaturePack Data with size: " + byte_array.byteLength);
             creature_pack = new CreaturePackLoader(byte_array.buffer);
-            var texture = PIXI.Texture.fromImage("raptor_img.png");
+            var texture = PIXI.Texture.fromImage("fox.png");
             
             // Start PixiJS     
     		// create a renderer instance.			
@@ -45,7 +45,7 @@
 			stage.addChild(creatureContainer);
 			
             var raptor_renderer = new CreaturePackRenderer(creature_pack, texture);
-            raptor_renderer.pack_renderer.setActiveAnimation("clip1");
+            raptor_renderer.pack_renderer.setActiveAnimation("run");
 			creatureContainer.addChild(raptor_renderer);
 			creatureContainer.scale.x = creatureContainer.scale.x;
                 
