@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+	
+	<head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+      <title>Three.js - Basic scene</title>
+      
+      <style>
+  		html, body {
+    		overflow: hidden;
+    		width: 100%;
+    		height: 100%;
+    		margin: 0;
+    		padding: 0;
+  		}
+
+		canvas { width: 100%; height: 100% }
+	  </style>
+
+   </head>
+   
+<body>
+
+<h1>ThreeJS CreaturePack Sample</h1>
+
+<script src="http://threejs.org/build/three.js"></script>
+<script src="gl-matrix.js"></script>
+<script src="msgpack.js"></script>
+<script src="CreaturePackModule.js"></script>
+<script src="CreatureThreeJSPackRenderer.js"></script>
+
+<script>
+
+    var xobj = new XMLHttpRequest();
+    xobj.responseType = "arraybuffer";
+	xobj.open('GET', 'fox2x.creature_pack', true); // Replace 'my_data' with the path to your file
+	xobj.onreadystatechange = function () {
+          if (xobj.readyState == 4 && xobj.status == "200") {
+            var byte_array = new Uint8Array(xobj.response);
+            console.log("Loaded CreaturePack Data with size: " + byte_array.byteLength);
+            var creature_pack = new CreaturePackLoader(byte_array.buffer);			
+			var scene;
+			var camera;
+			var renderer;
+			var new_creature_renderer;
+			
+			
+			function initScene() {
+				// Create scene
+			    scene = new THREE.Scene();
+
+	    		// This creates and positions a free camera
+	    		camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+				camera.position.z = -20;
+				camera.lookAt(scene.position);
+				scene.add(camera);
+	
+				// create renderer
+				renderer = new THREE.WebGLRenderer();
+				renderer.setSize(window.innerWidth, window.innerHeight );
+				document.body.appendChild( renderer.domElement );				
+			
+				var texture = new THREE.TextureLoader().load("fox.png");
+                //var material = new THREE.MeshBasicMaterial( { color: 0x00ff00, side:THREE.DoubleSide } );
+
+                
+                var material = new THREE.MeshBasicMaterial({
+	        		map: texture,
+	        		transparent: true,
+        			side:THREE.DoubleSide
+                  });
+                
+      			      								
+  				// Create creature renderer
+				new_creature_renderer = new CreaturePackRenderer("CreatureRenderer", scene, creature_pack, material);
+                new_creature_renderer.pack_renderer.setActiveAnimation("run");
+
+  				// Flip creature to the right
+  				new_creature_renderer.renderMesh.scale.x = -1;
+  			}
+
+			var animateScene = function () {                
+                new_creature_renderer.pack_renderer.stepTime(0.8);
+                new_creature_renderer.UpdateData();
+
+				requestAnimationFrame(animateScene);
+				renderer.render(scene, camera);
+			};
+
+			initScene();
+			animateScene();
+						  			  			
+          }
+    };
+    xobj.send(null);  
+ 
+ 
+  </script>
+
+</body>
+</html> 
