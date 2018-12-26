@@ -1,7 +1,8 @@
 module.exports = {
     useModel: false,
     updateRenderData (comp) {
-        if (!comp._renderData) {
+        if (!comp._renderData) 
+        {
             let IARenderData = cc.renderer.renderEngine.IARenderData;
             comp._renderData = new IARenderData();
             comp._renderData.material = comp.getMaterial();
@@ -10,6 +11,8 @@ module.exports = {
     },
 
     renderIA (comp, renderer) {
-        renderer._flushIA(comp._renderData);
+        if(comp._bufferInit) {
+            renderer._flushIA(comp._renderData);
+        }
     }
 }

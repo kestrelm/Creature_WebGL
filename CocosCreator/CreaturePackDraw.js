@@ -139,7 +139,7 @@ let CreaturePackDraw = cc.Class({
         ]);
 
         if(withPack)
-        {
+        {        
             // Read in the data for the character from CreaturePack
             this._vData = new Float32Array((2 + 2 + 1) * (this._packRenderer.render_points.length / 2));
             this._uintVData = new Uint32Array(this._vData.buffer);
@@ -167,15 +167,17 @@ let CreaturePackDraw = cc.Class({
                 this._maxY = Math.max(this._maxY, this._packData.points[i + 1]);
             }
             
+            
             this._vb = new gfx.VertexBuffer(
                 device,
                 this._vertexFormat,
                 gfx.USAGE_DYNAMIC,
                 // array buffer with real data
-                null,
+                this._vData,
                 // vertex count
                 this._packRenderer.render_points.length / 2
             );
+            
 
             this._ib = new gfx.IndexBuffer(
                 device,
@@ -185,46 +187,40 @@ let CreaturePackDraw = cc.Class({
                 // index count
                 this._iData.length
             );
+            
+
+            this._vb.update(0, this._vData);
+            this._ib.update(0, this._iData);
         }
         else {
-            // Default dummy rectangle
-            let maxVerts = 4;
-            this._vData = new Float32Array(maxVerts * 3);
-            this._uintVData = new Uint32Array(this._vData.buffer);
-            this._iData = new Uint16Array([0, 1, 2, 1, 3, 2]);
-
+            // Default data
             this._vb = new gfx.VertexBuffer(
                 device,
                 this._vertexFormat,
                 gfx.USAGE_DYNAMIC,
                 // array buffer with real data
-                null,
-                // vertex count
-                maxVerts
+                new ArrayBuffer(),
+                0
             );
-
 
             this._ib = new gfx.IndexBuffer(
                 device,
                 gfx.INDEX_FMT_UINT16,
                 gfx.USAGE_STATIC,
-                this._iData,
+                new ArrayBuffer(),
                 // index count
-                this._iData.length
-            );
-
-            return;
+                0
+            );            
         }
 
+        if(this._ia == null) {
+            this._ia = new renderEngine.InputAssembler();
+        }
 
-        this.node.getWorldMatrix(_currMat);
-        this._updateVertexData(_currMat);
-
-        this._ia = new renderEngine.InputAssembler();
         this._ia._vertexBuffer = this._vb;
         this._ia._indexBuffer = this._ib;
-        this._ia._start = 0;
-        this._ia._count = this._iData.length;
+        this._ia._start = 0;            
+        this._ia._count = (this._iData == null) ? 0 : this._iData.length;
 
         this._bufferInit = true;
     },
@@ -263,6 +259,7 @@ let CreaturePackDraw = cc.Class({
 
         // Here we load our assets using the cc.loader methods
 
+        this._createIA(false);
         // First load the creature_pack binary
         let cur_url = cc.url.raw("resources/fox2x.creature_pack");
         cc.loader.load({url:cur_url, type:"array_buffer"}, (err, data)=>{ 
