@@ -68,8 +68,8 @@ let CreaturePackDraw = cc.Class({
         }
 
         // This code uses the node's anchor points as a reference
-        let verts = this._vData,
-            uintV = this._uintVData;
+        let verts = this._vData;
+        let uintV = this._uintVData;
         let w = this.node.width,
             h = this.node.height,
             appx = w * this.node.anchorX,
@@ -109,6 +109,12 @@ let CreaturePackDraw = cc.Class({
 
             verts[j++] = this._packRenderer.render_uvs[i];
             verts[j++] = this._packRenderer.render_uvs[i + 1];
+
+            let colorIdx = i / 2 * 4;
+            curColor.setR(this._packRenderer.render_colors[colorIdx] * 255);
+            curColor.setG(this._packRenderer.render_colors[colorIdx + 1] * 255);
+            curColor.setB(this._packRenderer.render_colors[colorIdx + 2] * 255);
+            curColor.setA(this._packRenderer.render_colors[colorIdx + 3] * 255);
 
             uintV[j++] = curColor._val;
         }        
@@ -272,7 +278,7 @@ let CreaturePackDraw = cc.Class({
             this._packRenderer = new creaturepack.CreatureHaxeBaseRenderer(this._packData);
 
             // Set animation if you want
-            this._packRenderer.setActiveAnimation("run");
+            this._packRenderer.setActiveAnimation("fade");
 
             // Create VBOs etc.
             this._createIA(true);
