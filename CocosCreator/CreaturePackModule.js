@@ -163,6 +163,22 @@ class CreaturePackAnimClip{
 	}
 }
 
+// graphNode
+class graphNode
+{
+	constructor(idxIn=-1)
+	{
+		this.init(idxIn)
+	}
+
+	init(idxIn)
+	{
+		this.idx = idxIn;
+		this.visited = false;
+		this.neighbours = [];
+	}
+}
+
 // This is the class the loads in Creature Pack Data from disk
 //
 // CreaturePackLoader
@@ -219,8 +235,103 @@ class CreaturePackLoader{
 			this.animClipMap[animName] = newClip;
 		}
 
+		this.meshRegionsList = this.findConnectedRegions();
 	}
 
+	formUndirectedGraph()
+	{
+		var retGraph = {};
+		var numTriangles = this.getNumIndices() / 3;
+		for (var i = 0; i < numTriangles; i++)
+		{
+			var triIndices = new Array(3);
+			triIndices[0] = this.indices[i * 3];
+			triIndices[1] = this.indices[i * 3 + 1];
+			triIndices[2] = this.indices[i * 3 + 2];
+
+			for(var m = 0; m < triIndices.length; m++)
+			{
+				var triIndex = triIndices[m];
+				if ((triIndex in retGraph) == false)
+				{
+					retGraph[triIndex] = new graphNode(triIndex);
+				}
+
+				var curGraphNode = retGraph[triIndex];
+				for (var j = 0; j < triIndices.length; j++)
+				{
+					var cmpIndex = triIndices[j];
+					if (cmpIndex != triIndex)
+					{
+						curGraphNode.neighbours.push(cmpIndex);
+					}
+				}
+			}
+		}
+
+		return retGraph;
+	}
+
+	regionsDFS(graph, idx)
+	{
+		var retData = [];
+		if (graph[idx].visited)
+		{
+			return retData;
+		}
+
+		var gstack = [];
+		gstack.push(idx);
+
+		while (gstack.length > 0)
+		{
+			var curIdx = gstack.pop();
+
+			var curNode = graph[curIdx];
+			if (curNode.visited == false)
+			{
+				curNode.visited = true;
+				retData.push(curNode.idx);
+				// search all connected for curNode
+				for(var m = 0; m < curNode.neighbours.length; m++)
+				{
+					var neighbourIdx = curNode.neighbours[m];
+					gstack.push(neighbourIdx);
+				}
+			}
+		}
+
+		return retData;
+	}
+
+	findConnectedRegions()
+	{
+		var regionsList = [];
+		var graph = this.formUndirectedGraph();
+
+		// Run depth first search
+		var regionIdx = 0;
+		for (var i = 0; i < this.getNumIndices(); i++)
+		{
+			var curIdx = this.indices[i];
+			if (graph[curIdx].visited == false)
+			{
+				var indicesList = this.regionsDFS(graph, curIdx);
+				indicesList.sort();
+
+				regionsList.push(
+					[
+						indicesList[0], 
+						indicesList[indicesList.Count - 1]
+					]
+				);
+
+				regionIdx++;
+			}
+		}
+
+		return regionsList;
+	}	
 
 	updateIndices(idx) {
 		var cur_data = this.fileData[idx];
