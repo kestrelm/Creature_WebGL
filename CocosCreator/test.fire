@@ -356,7 +356,8 @@
     "_srcBlendFactor": 770,
     "_dstBlendFactor": 771,
     "useSkinSwap": false,
-    "skinSwap": "",
+    "skinSwapName": "cape",
+    "startAnimation": "cape",
     "_id": "69ous8ijxC9KIYoGQP7qPF"
   },
   {

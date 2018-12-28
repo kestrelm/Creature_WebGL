@@ -57,7 +57,8 @@ let CreaturePackDraw = cc.Class({
 
     properties: {
         useSkinSwap : false,
-        skinSwap : ""
+        skinSwapName : "",
+        startAnimation : ""
     },
 
     _updateRenderData (matrix) {
@@ -361,7 +362,10 @@ let CreaturePackDraw = cc.Class({
                 + Object.keys(this._metaData.mesh_map).length.toString() + " Mesh Regions"
                 );
 
-                this.switchToSkin("cape");
+                if(this.useSkinSwap && (this.skinSwapName != ""))
+                {
+                    this.switchToSkin(this.skinSwapName);
+                }
             }
         );
     },
@@ -379,7 +383,10 @@ let CreaturePackDraw = cc.Class({
             this._packRenderer = new creaturepack.CreatureHaxeBaseRenderer(this._packData);
 
             // Set animation if you want
-            this._packRenderer.setActiveAnimation("defaultGun");
+            if(this.startAnimation != "")
+            {
+                this._packRenderer.setActiveAnimation(this.startAnimation);
+            }
 
             // Create VBOs etc.
             this._createIA(true);
@@ -408,6 +415,34 @@ let CreaturePackDraw = cc.Class({
         );
     },
 
+    processReload() {
+        var shouldReload = false;
+        var self = this;
+        var changeAwareList = this._changeAwareList;
+
+        for(var i = 0; i < changeAwareList.length; i++)
+        {
+            var curKey = changeAwareList[i];
+            var inChangeProps = (curKey in this._changeProps);
+            if(!inChangeProps)
+            {
+                shouldReload = true;
+                this._changeProps[curKey] = self[curKey];
+            }
+
+            if(this._changeProps[curKey] != self[curKey])
+            {
+                shouldReload = true;
+                this._changeProps[curKey] = self[curKey];
+            }
+        }
+
+        if(shouldReload)
+        {
+            this.loadCharacter();
+        }
+    },
+
     // LIFE-CYCLE CALLBACKS:
     onLoad () {
         this._material = new renderEngine.SpriteMaterial();
@@ -422,14 +457,21 @@ let CreaturePackDraw = cc.Class({
         this._minY = null;
         this._maxX = null;
         this._maxY = null;
+        this._changeProps = {}
+        this._changeAwareList = [
+            "useSkinSwap", 
+            "skinSwapName",
+            "startAnimation"
+        ];
 
         // Here we load our assets using the cc.loader methods
 
         this._createIA(false);
-        this.loadCharacter();
+        this.processReload();
     },
 
     update () {
+        this.processReload();
         this.updatePackRenderData(this._timeStep);
         this.node.getWorldMatrix(_currMat);
 
