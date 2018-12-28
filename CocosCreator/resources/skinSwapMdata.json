@@ -1,0 +1,248 @@
+{
+    "AnchorPoints": {
+        "anchors": [],
+        "name": "Anchor Points",
+        "type": "anchorPointHolder"
+    },
+    "AnimRegionColors": {
+        "cape": {},
+        "default": {},
+        "dress": {}
+    },
+    "CompositeClips": {},
+    "VertAttachments": {
+        "attachments": [],
+        "name": "Vert Attachments",
+        "type": "vertAttachHolder"
+    },
+    "eventTriggers": {
+        "cape": [],
+        "default": [],
+        "dress": []
+    },
+    "meshes": {
+        "arm1": {
+            "endIndex": 6707,
+            "id": 8,
+            "startIndex": 6456
+        },
+        "arm2": {
+            "endIndex": 1067,
+            "id": 11,
+            "startIndex": 816
+        },
+        "cape": {
+            "endIndex": 815,
+            "id": 13,
+            "startIndex": 0
+        },
+        "dress": {
+            "endIndex": 5321,
+            "id": 5,
+            "startIndex": 2856
+        },
+        "gun": {
+            "endIndex": 6455,
+            "id": 10,
+            "startIndex": 5976
+        },
+        "lowerHair": {
+            "endIndex": 1235,
+            "id": 6,
+            "startIndex": 1068
+        },
+        "sword": {
+            "endIndex": 5711,
+            "id": 9,
+            "startIndex": 5322
+        },
+        "torso": {
+            "endIndex": 2855,
+            "id": 7,
+            "startIndex": 1236
+        },
+        "upperHair": {
+            "endIndex": 5975,
+            "id": 4,
+            "startIndex": 5712
+        }
+    },
+    "physicsData": {
+        "cape": {
+            "motor_15": [
+                "Bone_28",
+                "Bone_29"
+            ],
+            "motor_17": [
+                "Bone_42",
+                "Bone_43",
+                "Bone_44",
+                "Bone_45"
+            ],
+            "motor_24": [
+                "Bone_38",
+                "Bone_39",
+                "Bone_40",
+                "Bone_41"
+            ],
+            "motor_30": [
+                "Bone_30",
+                "Bone_31",
+                "Bone_32",
+                "Bone_33"
+            ],
+            "motor_34": [
+                "Bone_34",
+                "Bone_35",
+                "Bone_36",
+                "Bone_37"
+            ],
+            "motor_48": [
+                "Bone_47",
+                "Bone_48",
+                "Bone_49",
+                "Bone_50",
+                "Bone_51",
+                "Bone_52"
+            ],
+            "motor_59": [
+                "Bone_53",
+                "Bone_54",
+                "Bone_55",
+                "Bone_56",
+                "Bone_57",
+                "Bone_58"
+            ],
+            "motor_6": [
+                "Bone_19",
+                "Bone_20"
+            ],
+            "motor_8": [
+                "Bone_59",
+                "Bone_60",
+                "Bone_61",
+                "Bone_62",
+                "Bone_63"
+            ]
+        },
+        "default": {
+            "motor_15": [
+                "Bone_28",
+                "Bone_29"
+            ],
+            "motor_6": [
+                "Bone_19",
+                "Bone_20"
+            ]
+        },
+        "dress": {
+            "motor_12": [
+                "Bone_19",
+                "Bone_20"
+            ],
+            "motor_15": [
+                "Bone_24",
+                "Bone_25",
+                "Bone_26"
+            ],
+            "motor_26": [
+                "Bone_43",
+                "Bone_44",
+                "Bone_45"
+            ],
+            "motor_31": [
+                "Bone_31",
+                "Bone_32",
+                "Bone_33"
+            ],
+            "motor_35": [
+                "Bone_35",
+                "Bone_36",
+                "Bone_37"
+            ],
+            "motor_39": [
+                "Bone_39",
+                "Bone_40",
+                "Bone_41"
+            ],
+            "motor_5": [
+                "Bone_27",
+                "Bone_28",
+                "Bone_29"
+            ]
+        }
+    },
+    "regionOrders": {
+        "cape": [],
+        "default": [],
+        "dress": []
+    },
+    "skinSwapList": {
+        "Default": {
+            "swap": {
+                "name": "Default",
+                "swap_items": [
+                    "arm2",
+                    "lowerHair",
+                    "upperHair",
+                    "torso",
+                    "arm1"
+                ]
+            }
+        },
+        "cape": {
+            "swap": {
+                "name": "cape",
+                "swap_items": [
+                    "cape",
+                    "arm1",
+                    "gun",
+                    "arm2",
+                    "torso",
+                    "lowerHair",
+                    "upperHair"
+                ]
+            }
+        },
+        "defaultGun": {
+            "swap": {
+                "name": "defaultGun",
+                "swap_items": [
+                    "arm2",
+                    "gun",
+                    "torso",
+                    "arm1",
+                    "lowerHair",
+                    "upperHair"
+                ]
+            }
+        },
+        "dress": {
+            "swap": {
+                "name": "dress",
+                "swap_items": [
+                    "arm2",
+                    "torso",
+                    "lowerHair",
+                    "upperHair",
+                    "dress",
+                    "arm1"
+                ]
+            }
+        },
+        "dressSword": {
+            "swap": {
+                "name": "dressSword",
+                "swap_items": [
+                    "arm2",
+                    "lowerHair",
+                    "torso",
+                    "arm1",
+                    "dress",
+                    "sword",
+                    "upperHair"
+                ]
+            }
+        }
+    }
+}

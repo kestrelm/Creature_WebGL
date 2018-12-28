@@ -317,12 +317,17 @@ class CreaturePackLoader{
 			if (graph[curIdx].visited == false)
 			{
 				var indicesList = this.regionsDFS(graph, curIdx);
-				indicesList.sort();
+
+				function sortNumber(a,b) {
+					return a - b;
+				}
+
+				indicesList.sort(sortNumber);
 
 				regionsList.push(
 					[
 						indicesList[0], 
-						indicesList[indicesList.Count - 1]
+						indicesList[indicesList.length - 1]
 					]
 				);
 

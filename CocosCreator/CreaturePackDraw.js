@@ -15,6 +15,7 @@
 
 let creaturepack = require('./CreaturePackModule');
 let assembler = require('./CreaturePackDrawAssembler');
+let packMeta = require('./CreaturePackMeta');
 let renderEngine;
 let gfx;
 let math;
@@ -55,17 +56,17 @@ let CreaturePackDraw = cc.Class({
     extends: cc.RenderComponent,
 
     properties: {
-        blColor: cc.Color,
-        brColor: cc.Color,
-        tlColor: cc.Color,
-        trColor: cc.Color,
+        useSkinSwap : false,
+        skinSwap : ""
     },
 
-    _updateVertexData (matrix) {
+    _updateRenderData (matrix) {
         if(this._packRenderer == null)
         {
             return;
         }
+
+        // Vertices
 
         // This code uses the node's anchor points as a reference
         let verts = this._vData;
@@ -231,6 +232,43 @@ let CreaturePackDraw = cc.Class({
         this._bufferInit = true;
     },
 
+    switchToSkin(swapName) {
+        // Take Note: SkinSwap currently only supports Mesh Export Resolution of 100 in Game Export!
+        // This will be fixed in the upcoming updates
+        // Switches to a new SkinSwap
+        var swapIndices = this._metaData.buildSkinSwapIndices(
+            swapName,
+            this._packData.indices,
+            this._packRenderer
+        );
+
+        if(swapIndices.length > 0)
+        {
+            let device = cc.renderer.device;
+            this._iData = new Uint16Array(swapIndices.length);
+
+            for(var i = 0; i < swapIndices.length; i+=3)
+            {
+                this._iData[i] = swapIndices[i];
+                this._iData[i + 1] = swapIndices[i + 1];
+                this._iData[i + 2] = swapIndices[i + 2];
+            }   
+
+            this._ib = new gfx.IndexBuffer(
+                device,
+                gfx.INDEX_FMT_UINT16,
+                gfx.USAGE_STATIC,
+                this._iData,
+                // index count
+                this._iData.length
+            );
+
+            this._ia._indexBuffer = this._ib;
+            this._ia._start = 0;            
+            this._ia._count = (this._iData == null) ? 0 : this._iData.length;
+        }
+    },
+
     onEnable () {
         this._super();
 
@@ -246,7 +284,129 @@ let CreaturePackDraw = cc.Class({
 
         this._packRenderer.stepTime(timestep);
         this._packRenderer.syncRenderData();
-    },    
+    },
+    
+    loadMetaData () {
+        this._metaData = null;
+        let meta_url = cc.url.raw("resources/skinSwapMdata.json");
+
+        cc.loader.load(
+            {
+                url: meta_url,
+                type:"json"
+            },
+            (err,data)=>
+            {
+                if (err) {
+                    console.error('cc.loader.loadRes  ' + err.message);
+                    return;
+                }
+
+                this._metaData = new packMeta.CreaturePackMetaData();
+                var cJSON = data.json;
+
+                if(cJSON == null)
+                {
+                    cJSON = data;
+                    if(cJSON == null)
+                    {
+                        // BUG in CocosCreator itself??! Discrepency between
+                        // Editor and Runtime
+                        return;
+                    }
+                }
+
+                // Mesh Regions
+                if("meshes" in cJSON)
+                {
+                    var allMeshes = cJSON["meshes"];
+                    for(var regionKey in allMeshes)
+                    {
+                        if(allMeshes.hasOwnProperty(regionKey))
+                        {
+                            var regionName = regionKey;
+                            var curObj = allMeshes[regionName];
+                            var startIdx = curObj["startIndex"];
+                            var endIdx = curObj["endIndex"];
+
+                            this._metaData.mesh_map[regionName] = [startIdx, endIdx];
+                        }
+                    }
+                }
+                
+                // Skin Swaps
+                if("skinSwapList" in cJSON)
+                {
+                    var skinSwapObj = cJSON["skinSwapList"];
+                    for(var curKey in skinSwapObj)
+                    {
+                        if (skinSwapObj.hasOwnProperty(curKey)) { 
+                            var swapName = curKey;
+                            var swapData = skinSwapObj[swapName]["swap"];
+                            var swapItems = swapData["swap_items"];
+                            var swapSet = new Set();
+                            for(var j = 0; j < swapItems.length; j++)
+                            {
+                                var curItem = swapItems[j];
+                                swapSet.add(curItem);
+                            }
+
+                            this._metaData.skin_swaps[swapName] = swapSet;
+                        }
+                    }
+                }
+
+                cc.log("Loaded metaData with " 
+                + Object.keys(this._metaData.skin_swaps).length.toString() + " SkinSwaps, "
+                + Object.keys(this._metaData.mesh_map).length.toString() + " Mesh Regions"
+                );
+
+                this.switchToSkin("cape");
+            }
+        );
+    },
+
+    loadCharacter() {
+        // First load the creature_pack binary
+        let cur_url = cc.url.raw("resources/skinSwap2x.creature_pack");
+        cc.loader.load({url:cur_url, type:"array_buffer"}, (err, data)=>{ 
+            if (err) {
+                console.error('cc.loader.loadRes  ' + err.message);
+                return;
+            }
+            
+            this._packData =  new creaturepack.CreaturePackLoader(data.buffer);
+            this._packRenderer = new creaturepack.CreatureHaxeBaseRenderer(this._packData);
+
+            // Set animation if you want
+            this._packRenderer.setActiveAnimation("defaultGun");
+
+            // Create VBOs etc.
+            this._createIA(true);
+            cc.log("Loaded CreaturePack data with " + this._packData.meshRegionsList.length.toString() + " regions");
+
+            this.loadMetaData();
+        });
+
+        // Now load the texture of the character
+        let pic_url = cc.url.raw("resources/skinSwap.png");
+        cc.loader.load(
+            {
+                url: pic_url,
+                type:"png"
+            },
+            (err,data)=>
+            {
+                if (err) {
+                    console.error('cc.loader.loadRes  ' + err.message);
+                    return;
+                }
+                
+                this._material.texture = data;
+                cc.log("Loaded texture.");
+            }
+        );
+    },
 
     // LIFE-CYCLE CALLBACKS:
     onLoad () {
@@ -266,43 +426,7 @@ let CreaturePackDraw = cc.Class({
         // Here we load our assets using the cc.loader methods
 
         this._createIA(false);
-        // First load the creature_pack binary
-        let cur_url = cc.url.raw("resources/fox2x.creature_pack");
-        cc.loader.load({url:cur_url, type:"array_buffer"}, (err, data)=>{ 
-            if (err) {
-                console.error('cc.loader.loadRes  ' + err.message);
-                return;
-            }
-            
-            this._packData =  new creaturepack.CreaturePackLoader(data.buffer);
-            this._packRenderer = new creaturepack.CreatureHaxeBaseRenderer(this._packData);
-
-            // Set animation if you want
-            this._packRenderer.setActiveAnimation("fade");
-
-            // Create VBOs etc.
-            this._createIA(true);
-            cc.log("Loaded CreaturePack data.");
-        });
-
-        // Now load the texture of the character
-        let pic_url = cc.url.raw("resources/fox.png");
-        cc.loader.load(
-            {
-                url: pic_url,
-                type:"png"
-            },
-            (err,data)=>
-            {
-                if (err) {
-                    console.error('cc.loader.loadRes  ' + err.message);
-                    return;
-                }
-                
-                this._material.texture = data;
-                cc.log("Loaded texture.");
-            }
-        );
+        this.loadCharacter();
     },
 
     update () {
@@ -314,7 +438,7 @@ let CreaturePackDraw = cc.Class({
             this._updateDefaultVertexData(_currMat);
         }
         else {
-            this._updateVertexData(_currMat);
+            this._updateRenderData(_currMat);
         }
     }
 });

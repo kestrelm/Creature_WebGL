@@ -41,9 +41,9 @@
     },
     "_scale": {
       "__type__": "cc.Vec3",
-      "x": 0.32943684809104545,
-      "y": 0.32943684809104545,
-      "z": 0.32943684809104545
+      "x": 0.4703125,
+      "y": 0.4703125,
+      "z": 0.4703125
     },
     "_quat": {
       "__type__": "cc.Quat",
@@ -311,8 +311,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 400,
-      "height": 400
+      "width": 200,
+      "height": 200
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -321,8 +321,8 @@
     },
     "_position": {
       "__type__": "cc.Vec3",
-      "x": -143,
-      "y": 60,
+      "x": -83,
+      "y": -308,
       "z": 0
     },
     "_scale": {
@@ -355,34 +355,8 @@
     "_enabled": true,
     "_srcBlendFactor": 770,
     "_dstBlendFactor": 771,
-    "blColor": {
-      "__type__": "cc.Color",
-      "r": 0,
-      "g": 0,
-      "b": 0,
-      "a": 255
-    },
-    "brColor": {
-      "__type__": "cc.Color",
-      "r": 0,
-      "g": 0,
-      "b": 0,
-      "a": 255
-    },
-    "tlColor": {
-      "__type__": "cc.Color",
-      "r": 0,
-      "g": 0,
-      "b": 0,
-      "a": 255
-    },
-    "trColor": {
-      "__type__": "cc.Color",
-      "r": 0,
-      "g": 0,
-      "b": 0,
-      "a": 255
-    },
+    "useSkinSwap": false,
+    "skinSwap": "",
     "_id": "69ous8ijxC9KIYoGQP7qPF"
   },
   {
