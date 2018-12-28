@@ -29,8 +29,7 @@ var arrayBufferHandler = function (item, callback) {
     xhr.onload = function (oEvent) {
         var arrayBuffer = xhr.response;
         if (arrayBuffer) {
-            var result = new Uint8Array(arrayBuffer);
-            callback(null, result);
+            callback(null, arrayBuffer);
         }
         else {
             callback(errorMessage);
@@ -379,7 +378,7 @@ let CreaturePackDraw = cc.Class({
                 return;
             }
             
-            this._packData =  new creaturepack.CreaturePackLoader(data.buffer);
+            this._packData =  new creaturepack.CreaturePackLoader(data);
             this._packRenderer = new creaturepack.CreatureHaxeBaseRenderer(this._packData);
 
             // Set animation if you want
