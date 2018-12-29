@@ -355,7 +355,12 @@
     "_enabled": true,
     "_srcBlendFactor": 770,
     "_dstBlendFactor": 771,
-    "useSkinSwap": false,
+    "charTexture": {
+      "__uuid__": "eb5dcf8a-8196-476b-b1f5-f9b611711455"
+    },
+    "creaturePackDataPath": "resources/skinSwap2x.creature_pack",
+    "metaDataPath": "resources/skinSwapMdata.json",
+    "useSkinSwap": true,
     "skinSwapName": "cape",
     "startAnimation": "cape",
     "_id": "69ous8ijxC9KIYoGQP7qPF"

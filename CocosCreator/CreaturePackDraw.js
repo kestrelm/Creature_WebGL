@@ -55,6 +55,12 @@ let CreaturePackDraw = cc.Class({
     extends: cc.RenderComponent,
 
     properties: {
+        charTexture: {
+            default : null,
+            type: cc.Texture2D
+        },
+        creaturePackDataPath: "",
+        metaDataPath: "",
         useSkinSwap : false,
         skinSwapName : "",
         startAnimation : ""
@@ -288,7 +294,12 @@ let CreaturePackDraw = cc.Class({
     
     loadMetaData () {
         this._metaData = null;
-        let meta_url = cc.url.raw("resources/skinSwapMdata.json");
+        if(this.metaDataPath == "")
+        {
+            return;
+        }
+
+        let meta_url = cc.url.raw(this.metaDataPath);
 
         cc.loader.load(
             {
@@ -371,7 +382,13 @@ let CreaturePackDraw = cc.Class({
 
     loadCharacter() {
         // First load the creature_pack binary
-        let cur_url = cc.url.raw("resources/skinSwap2x.creature_pack");
+        if(this.creaturePackDataPath == "")
+        {
+            cc.log("No Character loaded! Please specify the CreaturePack character path starting like so: resources/myCreaturePackFile.creature_pack. Files need to be in the resouorces folder.");
+            return;
+        }
+
+        let cur_url = cc.url.raw(this.creaturePackDataPath);
         cc.loader.load({url:cur_url, type:"array_buffer"}, (err, data)=>{ 
             if (err) {
                 console.error('cc.loader.loadRes  ' + err.message);
@@ -395,23 +412,14 @@ let CreaturePackDraw = cc.Class({
         });
 
         // Now load the texture of the character
-        let pic_url = cc.url.raw("resources/skinSwap.png");
-        cc.loader.load(
-            {
-                url: pic_url,
-                type:"png"
-            },
-            (err,data)=>
-            {
-                if (err) {
-                    console.error('cc.loader.loadRes  ' + err.message);
-                    return;
-                }
-                
-                this._material.texture = data;
-                cc.log("Loaded texture.");
-            }
-        );
+       if(this.charTexture != null)
+       {
+        this._material.texture = this.charTexture ;
+        cc.log("Loaded Character Texture.");
+       }
+       else {
+        cc.log("No Character Texture.");
+       }
     },
 
     processReload() {
@@ -458,6 +466,9 @@ let CreaturePackDraw = cc.Class({
         this._maxY = null;
         this._changeProps = {}
         this._changeAwareList = [
+            "charTexture",
+            "creaturePackDataPath",
+            "metaDataPath",
             "useSkinSwap", 
             "skinSwapName",
             "startAnimation"
