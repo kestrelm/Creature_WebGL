@@ -1,6 +1,6 @@
-# CreaturePack for Cocos Creator (EXPERIMENTAL)
+# CreaturePack for Cocos Creator
 
-This folder contains files for running **CreaturePack** in **Cocos Creator**. Please note this is still an **Experimental** module.
+This folder contains files for running **CreaturePack** in **Cocos Creator**. This enables you to publish games with the **Creature Animation Tool** for platforms like the **Wechat Mini Game Engine**.
 
 ## Overview
 
@@ -8,10 +8,22 @@ This is a sample to show you how to load and run your CreaturePack characters in
 
 ## Usage
 
-Take note that this sample loads the fox character dynamically in the code. Change it to fit your own requirements.
+### Convert your Creature Pack assets to b64 Text Encoding
+
+**This is very important!** Please either do this yourself or run the provided b64Encode.py in the main WebGL runtimes directory.
+
+Usage: python b64Encode.py <yourCreaturePack.creature_pack> <outputFile.txt>
+
+### Setup and Run
+
+Now go into Cocos Creator:
+
+( First, make sure all your assets are in the resource folder of your game project )
 
 1. Create an Empty Node in your Cocos Creator scene
 2. Drag this CreaturePackDraw as as component into your node 
-3. Run your game.
+3. Assign the CreaturePack b64 encoded text asset into the **Creature Pack Asset** slot
+4. Assign your character atlas png file to the **Char Texture** slot
+5. Optionally, assign the meta data ( please rename with a .json extension ) to the **Meta Data Asset** slot if you want SkinSwapping
 
     
