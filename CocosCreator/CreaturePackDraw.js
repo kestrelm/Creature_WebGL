@@ -59,8 +59,14 @@ let CreaturePackDraw = cc.Class({
             default : null,
             type: cc.Texture2D
         },
-        creaturePackDataPath: "",
-        metaDataPath: "",
+        creaturePackAsset: {
+            default : null,
+            type: cc.TextAsset
+        },
+        metaDataAsset: {
+            default : null,
+            type: cc.JsonAsset
+        },
         useSkinSwap : false,
         skinSwapName : "",
         startAnimation : ""
@@ -294,110 +300,99 @@ let CreaturePackDraw = cc.Class({
     
     loadMetaData () {
         this._metaData = null;
-        if(this.metaDataPath == "")
+        if(this.metaDataAsset == null)
         {
             return;
         }
 
-        let meta_url = cc.url.raw(this.metaDataPath);
 
-        cc.loader.load(
+        this._metaData = new packMeta.CreaturePackMetaData();
+        var cJSON = this.metaDataAsset.json;
+
+        if(cJSON == null)
+        {
+            cJSON = data;
+            if(cJSON == null)
             {
-                url: meta_url,
-                type:"json"
-            },
-            (err,data)=>
+                // BUG in CocosCreator itself??! Discrepency between
+                // Editor and Runtime
+                return;
+            }
+        }
+
+        // Mesh Regions
+        if("meshes" in cJSON)
+        {
+            var allMeshes = cJSON["meshes"];
+            for(var regionKey in allMeshes)
             {
-                if (err) {
-                    console.error('cc.loader.loadRes  ' + err.message);
-                    return;
-                }
-
-                this._metaData = new packMeta.CreaturePackMetaData();
-                var cJSON = data.json;
-
-                if(cJSON == null)
+                if(allMeshes.hasOwnProperty(regionKey))
                 {
-                    cJSON = data;
-                    if(cJSON == null)
-                    {
-                        // BUG in CocosCreator itself??! Discrepency between
-                        // Editor and Runtime
-                        return;
-                    }
-                }
+                    var regionName = regionKey;
+                    var curObj = allMeshes[regionName];
+                    var startIdx = curObj["startIndex"];
+                    var endIdx = curObj["endIndex"];
 
-                // Mesh Regions
-                if("meshes" in cJSON)
-                {
-                    var allMeshes = cJSON["meshes"];
-                    for(var regionKey in allMeshes)
-                    {
-                        if(allMeshes.hasOwnProperty(regionKey))
-                        {
-                            var regionName = regionKey;
-                            var curObj = allMeshes[regionName];
-                            var startIdx = curObj["startIndex"];
-                            var endIdx = curObj["endIndex"];
-
-                            this._metaData.mesh_map[regionName] = [startIdx, endIdx];
-                        }
-                    }
-                }
-                
-                // Skin Swaps
-                if("skinSwapList" in cJSON)
-                {
-                    var skinSwapObj = cJSON["skinSwapList"];
-                    for(var curKey in skinSwapObj)
-                    {
-                        if (skinSwapObj.hasOwnProperty(curKey)) { 
-                            var swapName = curKey;
-                            var swapData = skinSwapObj[swapName]["swap"];
-                            var swapItems = swapData["swap_items"];
-                            var swapSet = new Set();
-                            for(var j = 0; j < swapItems.length; j++)
-                            {
-                                var curItem = swapItems[j];
-                                swapSet.add(curItem);
-                            }
-
-                            this._metaData.skin_swaps[swapName] = swapSet;
-                        }
-                    }
-                }
-
-                cc.log("Loaded metaData with " 
-                + Object.keys(this._metaData.skin_swaps).length.toString() + " SkinSwaps, "
-                + Object.keys(this._metaData.mesh_map).length.toString() + " Mesh Regions"
-                );
-
-                if(this.useSkinSwap && (this.skinSwapName != ""))
-                {
-                    this.switchToSkin(this.skinSwapName);
+                    this._metaData.mesh_map[regionName] = [startIdx, endIdx];
                 }
             }
+        }
+        
+        // Skin Swaps
+        if("skinSwapList" in cJSON)
+        {
+            var skinSwapObj = cJSON["skinSwapList"];
+            for(var curKey in skinSwapObj)
+            {
+                if (skinSwapObj.hasOwnProperty(curKey)) { 
+                    var swapName = curKey;
+                    var swapData = skinSwapObj[swapName]["swap"];
+                    var swapItems = swapData["swap_items"];
+                    var swapSet = new Set();
+                    for(var j = 0; j < swapItems.length; j++)
+                    {
+                        var curItem = swapItems[j];
+                        swapSet.add(curItem);
+                    }
+
+                    this._metaData.skin_swaps[swapName] = swapSet;
+                }
+            }
+        }
+
+        cc.log("Loaded metaData with " 
+        + Object.keys(this._metaData.skin_swaps).length.toString() + " SkinSwaps, "
+        + Object.keys(this._metaData.mesh_map).length.toString() + " Mesh Regions"
         );
+
+        if(this.useSkinSwap && (this.skinSwapName != ""))
+        {
+            this.switchToSkin(this.skinSwapName);
+        }
+    },
+
+    base64ToArrayBuffer(base64) {
+        var binary_string =  atob(base64);
+        var len = binary_string.length;
+        var bytes = new Uint8Array( len );
+        for (var i = 0; i < len; i++)        {
+            bytes[i] = binary_string.charCodeAt(i);
+        }
+        return bytes.buffer;
     },
 
     loadCharacter() {
         // First load the creature_pack binary
-        if(this.creaturePackDataPath == "")
+        if(this.creaturePackAsset == null)
         {
-            cc.log("No Character loaded! Please specify the CreaturePack character path starting like so: resources/myCreaturePackFile.creature_pack. Files need to be in the resouorces folder.");
+            cc.log("No Character loaded! Please convert your creature_pack binary file into a b64 encoded text file, then drag it into the creaturePackAsset slot. There is a b64Encode python script in the main runtimes folder you can use to perform this task.");
             return;
         }
 
-        let cur_url = cc.url.raw(this.creaturePackDataPath);
-        cc.loader.load({url:cur_url, type:"array_buffer"}, (err, data)=>{ 
-            if (err) {
-                console.error('cc.loader.loadRes  ' + err.message);
-                return;
-            }
-            
+        if(this.creaturePackAsset) {
+            var data = this.base64ToArrayBuffer(this.creaturePackAsset);
             this._packData =  new creaturepack.CreaturePackLoader(data);
             this._packRenderer = new creaturepack.CreatureHaxeBaseRenderer(this._packData);
-
             // Set animation if you want
             if(this.startAnimation != "")
             {
@@ -408,8 +403,8 @@ let CreaturePackDraw = cc.Class({
             this._createIA(true);
             cc.log("Loaded CreaturePack data with " + this._packData.meshRegionsList.length.toString() + " regions");
 
-            this.loadMetaData();
-        });
+            this.loadMetaData();    
+        }
 
         // Now load the texture of the character
        if(this.charTexture != null)
@@ -467,8 +462,8 @@ let CreaturePackDraw = cc.Class({
         this._changeProps = {}
         this._changeAwareList = [
             "charTexture",
-            "creaturePackDataPath",
-            "metaDataPath",
+            "creaturePackAsset",
+            "metaDataAsset",
             "useSkinSwap", 
             "skinSwapName",
             "startAnimation"

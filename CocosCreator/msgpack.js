@@ -1,7 +1,7 @@
 /* jshint browser: true */
 /* global define, module */
 ( // Module boilerplate to support browser globals and browserify and AMD.
-  typeof define === "function" ? function (m) { define("msgpack-js", m); } :
+  typeof define === "function" && false? function (m) { define("msgpack-js", m); } :
   typeof exports === "object" ? function (m) { module.exports = m(); } :
   function(m){ this.msgpack = m(); }
 )(function () {

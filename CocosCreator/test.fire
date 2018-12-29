@@ -358,8 +358,12 @@
     "charTexture": {
       "__uuid__": "eb5dcf8a-8196-476b-b1f5-f9b611711455"
     },
-    "creaturePackDataPath": "resources/skinSwap2x.creature_pack",
-    "metaDataPath": "resources/skinSwapMdata.json",
+    "creaturePackAsset": {
+      "__uuid__": "0b96b682-bb6c-4afe-8a12-23545fa56c4a"
+    },
+    "metaDataAsset": {
+      "__uuid__": "e4cd4201-003c-462b-90d2-233339a32b1d"
+    },
     "useSkinSwap": true,
     "skinSwapName": "cape",
     "startAnimation": "cape",
