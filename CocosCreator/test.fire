@@ -321,8 +321,8 @@
     },
     "_position": {
       "__type__": "cc.Vec3",
-      "x": -83,
-      "y": -308,
+      "x": -94,
+      "y": -340,
       "z": 0
     },
     "_scale": {
@@ -343,7 +343,7 @@
     "_zIndex": 0,
     "_is3DNode": false,
     "groupIndex": 0,
-    "_id": "eblLw4Z2dGXosZJ+3Q1lPG"
+    "_id": "5eU1nSmNhGUbdy6V4trYuZ"
   },
   {
     "__type__": "d1b9bOoguZNObajpmvgl164",
@@ -367,7 +367,7 @@
     "useSkinSwap": true,
     "skinSwapName": "cape",
     "startAnimation": "cape",
-    "_id": "69ous8ijxC9KIYoGQP7qPF"
+    "_id": "2e0QxTG2dIKaHCdi6yfjsE"
   },
   {
     "__type__": "cc.Sprite",

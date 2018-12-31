@@ -16,6 +16,7 @@
 let creaturepack = require('./CreaturePackModule');
 let assembler = require('./CreaturePackDrawAssembler');
 let packMeta = require('./CreaturePackMeta');
+let B64 = require('./base64');
 let renderEngine;
 let gfx;
 let math;
@@ -371,8 +372,8 @@ let CreaturePackDraw = cc.Class({
         }
     },
 
-    base64ToArrayBuffer(base64) {
-        var binary_string =  atob(base64);
+    base64ToArrayBuffer(base64Str) {
+        var binary_string =  B64.decode(base64Str);
         var len = binary_string.length;
         var bytes = new Uint8Array( len );
         for (var i = 0; i < len; i++)        {
