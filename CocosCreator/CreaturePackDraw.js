@@ -297,6 +297,7 @@ let CreaturePackDraw = cc.Class({
 
         this._packRenderer.stepTime(timestep);
         this._packRenderer.syncRenderData();
+        this.processMeshColorOverrides();
     },
     
     loadMetaData () {
@@ -370,6 +371,9 @@ let CreaturePackDraw = cc.Class({
         {
             this.switchToSkin(this.skinSwapName);
         }
+
+        // If you want to set mesh color overrides, you can call this function:
+        // Example: this.setMeshColorOverride("gun", 0, 0, 0, 0); // Sets "gun" to (0, 0, 0, 0).
     },
 
     base64ToArrayBuffer(base64Str) {
@@ -469,11 +473,42 @@ let CreaturePackDraw = cc.Class({
             "skinSwapName",
             "startAnimation"
         ];
+        this._meshColorOverrides = {};
 
         // Here we load our assets using the cc.loader methods
 
         this._createIA(false);
         this.processReload();
+    },
+
+    setMeshColorOverride (regionName, r, g, b, a) {
+        // r, g, b, a value ranges are from (0.0 to 1.0)
+        this._meshColorOverrides[regionName] = [r, g, b, a];
+    },
+
+    processMeshColorOverrides() {
+        if(this._metaData == null)
+        {
+            return;
+        }
+
+        for(var regionName in this._meshColorOverrides)
+        {
+            var sColor = this._meshColorOverrides[regionName];
+            if(regionName in this._metaData.mesh_map)
+            {
+                var idxRange = this._metaData.mesh_map[regionName];
+                var colorsArray = this._packRenderer.render_colors;
+                for(var j = idxRange[0]; j <= idxRange[1]; j++)
+                {
+                    var vIdx = this._packRenderer.data.indices[j];
+                    for(var k = 0; k < 4; k++)
+                    {
+                        colorsArray[(vIdx * 4) + k] = sColor[k];
+                    }
+                }                
+            }            
+        }
     },
 
     update () {
