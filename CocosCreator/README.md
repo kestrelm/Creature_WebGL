@@ -1,6 +1,6 @@
 # CreaturePack for Cocos Creator
 
-This folder contains files for running **CreaturePack** in **Cocos Creator**. This enables you to publish games with the **Creature Animation Tool** for the various HTML5 and Native Mobile platforms Cocos Creator supports. The CreatorePack plugin is also [**Wechat Mini Game Engine**](https://developers.weixin.qq.com/minigame/en/introduction/) ready. 
+This folder contains files for running **CreaturePack** in **Cocos Creator**. This enables you to publish games with the **Creature Animation Tool** for the various HTML5 and Native Mobile platforms Cocos Creator supports. The CreaturePack plugin is also [**Wechat Mini Game Engine**](https://developers.weixin.qq.com/minigame/en/introduction/) ready. 
 
 ![Alt text](https://raw.githubusercontent.com/kestrelm/Creature_WebGL/master/CocosCreator/cocos_creator1.png)
 
