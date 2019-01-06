@@ -52,7 +52,7 @@ Now go into Cocos Creator:
 
 ### Controlling the character ( Animation Switching, Skin Swaps etc. )
 
-**CreaturePackDraw.j** is the file that contains most of the important object handles to controlling your character. In particular, there is the following object in the main class:
+**CreaturePackDraw.js** is the file that contains most of the important object handles to controlling your character. In particular, there is the following object in the main class:
 
 ``this._packRenderer``
 
