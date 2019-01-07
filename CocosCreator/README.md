@@ -4,6 +4,8 @@ This folder contains files for running **CreaturePack** in **Cocos Creator**. Th
 
 ![Alt text](https://raw.githubusercontent.com/kestrelm/Creature_WebGL/master/CocosCreator/cocos_creator1.png)
 
+A full writeup on the process can also be found [**here**](https://medium.com/@kestrelm/advanced-2d-skeletal-character-animation-for-the-wechat-mini-game-engine-with-cocos-creator-7a78c44d8cc8).
+
 ## Overview
 
 This is a sample to show you how to load and run your CreaturePack characters in CocosCreator.

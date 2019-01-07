@@ -1,0 +1,370 @@
+{
+    "AnchorPoints": {
+        "anchors": [],
+        "name": "Anchor Points",
+        "type": "anchorPointHolder"
+    },
+    "AnimRegionColors": {
+        "default": {}
+    },
+    "CompositeClips": {},
+    "VertAttachments": {
+        "attachments": [],
+        "name": "Vert Attachments",
+        "type": "vertAttachHolder"
+    },
+    "eventTriggers": {
+        "default": []
+    },
+    "meshes": {
+        "1": {
+            "endIndex": 3092,
+            "id": 266,
+            "startIndex": 3057
+        },
+        "10": {
+            "endIndex": 3377,
+            "id": 257,
+            "startIndex": 3321
+        },
+        "10_0": {
+            "endIndex": 3320,
+            "id": 268,
+            "startIndex": 3264
+        },
+        "11": {
+            "endIndex": 3263,
+            "id": 256,
+            "startIndex": 3237
+        },
+        "11_0": {
+            "endIndex": 3236,
+            "id": 269,
+            "startIndex": 3210
+        },
+        "12": {
+            "endIndex": 2438,
+            "id": 255,
+            "startIndex": 2412
+        },
+        "13": {
+            "endIndex": 3209,
+            "id": 254,
+            "startIndex": 3192
+        },
+        "14": {
+            "endIndex": 3179,
+            "id": 253,
+            "startIndex": 3168
+        },
+        "14_0": {
+            "endIndex": 3191,
+            "id": 272,
+            "startIndex": 3180
+        },
+        "15": {
+            "endIndex": 3683,
+            "id": 252,
+            "startIndex": 3645
+        },
+        "16": {
+            "endIndex": 3167,
+            "id": 251,
+            "startIndex": 3153
+        },
+        "17": {
+            "endIndex": 3152,
+            "id": 250,
+            "startIndex": 3129
+        },
+        "18": {
+            "endIndex": 3119,
+            "id": 249,
+            "startIndex": 3111
+        },
+        "18_0": {
+            "endIndex": 3128,
+            "id": 271,
+            "startIndex": 3120
+        },
+        "19": {
+            "endIndex": 3110,
+            "id": 248,
+            "startIndex": 3093
+        },
+        "2": {
+            "endIndex": 3728,
+            "id": 265,
+            "startIndex": 3684
+        },
+        "20": {
+            "endIndex": 3056,
+            "id": 247,
+            "startIndex": 2916
+        },
+        "21": {
+            "endIndex": 2915,
+            "id": 246,
+            "startIndex": 2892
+        },
+        "22": {
+            "endIndex": 2891,
+            "id": 245,
+            "startIndex": 2865
+        },
+        "23": {
+            "endIndex": 3767,
+            "id": 244,
+            "startIndex": 3735
+        },
+        "24": {
+            "endIndex": 2864,
+            "id": 243,
+            "startIndex": 2724
+        },
+        "25": {
+            "endIndex": 3734,
+            "id": 242,
+            "startIndex": 3729
+        },
+        "26": {
+            "endIndex": 2651,
+            "id": 241,
+            "startIndex": 2580
+        },
+        "27": {
+            "endIndex": 2579,
+            "id": 240,
+            "startIndex": 2511
+        },
+        "28": {
+            "endIndex": 2723,
+            "id": 239,
+            "startIndex": 2652
+        },
+        "29": {
+            "endIndex": 2381,
+            "id": 238,
+            "startIndex": 2346
+        },
+        "3": {
+            "endIndex": 3644,
+            "id": 264,
+            "startIndex": 3618
+        },
+        "30": {
+            "endIndex": 968,
+            "id": 237,
+            "startIndex": 930
+        },
+        "31": {
+            "endIndex": 2345,
+            "id": 236,
+            "startIndex": 2277
+        },
+        "32": {
+            "endIndex": 2204,
+            "id": 235,
+            "startIndex": 2160
+        },
+        "33": {
+            "endIndex": 2276,
+            "id": 234,
+            "startIndex": 2205
+        },
+        "34": {
+            "endIndex": 2159,
+            "id": 233,
+            "startIndex": 2103
+        },
+        "35": {
+            "endIndex": 2102,
+            "id": 232,
+            "startIndex": 2049
+        },
+        "36": {
+            "endIndex": 2048,
+            "id": 231,
+            "startIndex": 2004
+        },
+        "37": {
+            "endIndex": 2003,
+            "id": 230,
+            "startIndex": 1974
+        },
+        "38": {
+            "endIndex": 1973,
+            "id": 229,
+            "startIndex": 1947
+        },
+        "39": {
+            "endIndex": 1946,
+            "id": 228,
+            "startIndex": 1878
+        },
+        "4": {
+            "endIndex": 3617,
+            "id": 263,
+            "startIndex": 3594
+        },
+        "40": {
+            "endIndex": 2483,
+            "id": 227,
+            "startIndex": 2463
+        },
+        "41": {
+            "endIndex": 1877,
+            "id": 226,
+            "startIndex": 1830
+        },
+        "42": {
+            "endIndex": 2510,
+            "id": 225,
+            "startIndex": 2484
+        },
+        "43": {
+            "endIndex": 1829,
+            "id": 224,
+            "startIndex": 1770
+        },
+        "44": {
+            "endIndex": 2411,
+            "id": 223,
+            "startIndex": 2400
+        },
+        "45": {
+            "endIndex": 2399,
+            "id": 222,
+            "startIndex": 2382
+        },
+        "46": {
+            "endIndex": 2462,
+            "id": 221,
+            "startIndex": 2439
+        },
+        "47": {
+            "endIndex": 1769,
+            "id": 220,
+            "startIndex": 1722
+        },
+        "48": {
+            "endIndex": 1721,
+            "id": 219,
+            "startIndex": 1596
+        },
+        "49": {
+            "endIndex": 1595,
+            "id": 218,
+            "startIndex": 1554
+        },
+        "5": {
+            "endIndex": 3593,
+            "id": 262,
+            "startIndex": 3573
+        },
+        "50": {
+            "endIndex": 1553,
+            "id": 217,
+            "startIndex": 1509
+        },
+        "51": {
+            "endIndex": 1508,
+            "id": 216,
+            "startIndex": 1473
+        },
+        "52": {
+            "endIndex": 1331,
+            "id": 215,
+            "startIndex": 1242
+        },
+        "53": {
+            "endIndex": 1241,
+            "id": 214,
+            "startIndex": 1044
+        },
+        "54": {
+            "endIndex": 1472,
+            "id": 213,
+            "startIndex": 1401
+        },
+        "55": {
+            "endIndex": 1400,
+            "id": 212,
+            "startIndex": 1332
+        },
+        "56": {
+            "endIndex": 1043,
+            "id": 211,
+            "startIndex": 969
+        },
+        "57": {
+            "endIndex": 929,
+            "id": 210,
+            "startIndex": 858
+        },
+        "58": {
+            "endIndex": 671,
+            "id": 209,
+            "startIndex": 564
+        },
+        "59": {
+            "endIndex": 857,
+            "id": 208,
+            "startIndex": 672
+        },
+        "6": {
+            "endIndex": 3572,
+            "id": 261,
+            "startIndex": 3516
+        },
+        "60": {
+            "endIndex": 563,
+            "id": 207,
+            "startIndex": 546
+        },
+        "61": {
+            "endIndex": 545,
+            "id": 206,
+            "startIndex": 285
+        },
+        "62": {
+            "endIndex": 284,
+            "id": 205,
+            "startIndex": 96
+        },
+        "63": {
+            "endIndex": 95,
+            "id": 204,
+            "startIndex": 0
+        },
+        "7": {
+            "endIndex": 3515,
+            "id": 260,
+            "startIndex": 3438
+        },
+        "8": {
+            "endIndex": 3437,
+            "id": 259,
+            "startIndex": 3414
+        },
+        "9": {
+            "endIndex": 3413,
+            "id": 258,
+            "startIndex": 3378
+        }
+    },
+    "physicsData": {
+        "default": {}
+    },
+    "regionOrders": {
+        "default": []
+    },
+    "skinSwapList": {
+        "Default": {
+            "swap": {
+                "name": "Default",
+                "swap_items": []
+            }
+        }
+    }
+}
