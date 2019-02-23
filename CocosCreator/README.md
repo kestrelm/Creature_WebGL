@@ -1,10 +1,32 @@
-# CreaturePack for Cocos Creator
+# CreaturePack for Cocos Creator ( Creature 骨骼动画 Cocos Creator 和 微信小游戏 游戏引擎的支持)
 
 This folder contains files for running **CreaturePack** in **Cocos Creator**. This enables you to publish games with the **Creature Animation Tool** for the various HTML5 and Native Mobile platforms Cocos Creator supports. The CreaturePack plugin is also [**Wechat Mini Game Engine**](https://developers.weixin.qq.com/minigame/en/introduction/) ready. 
 
 ![Alt text](https://raw.githubusercontent.com/kestrelm/Creature_WebGL/master/CocosCreator/cocos_creator1.png)
 
 A full writeup on the process can also be found [**here**](https://medium.com/@kestrelm/advanced-2d-skeletal-character-animation-for-the-wechat-mini-game-engine-with-cocos-creator-7a78c44d8cc8).
+
+## Creature 骨骼动画教材/视频
+
+这是为中国Creature用户提供的一些教材 （  MP4 文件格式 ):
+
+Creature 骨骼动画教程 | 人物呼吸动作
+https://pan.baidu.com/s/18tjGOv9Bk73ox3PKfifa3w
+
+Creature 骨骼动画教程 | 建立人脸 + 动画
+https://pan.baidu.com/s/1VK_PpelTmZR3B5OTHi7x0g
+
+Creature 骨骼动画教程 | 游戏引擎动画优化和压缩
+https://pan.baidu.com/s/1sYLSpVfOtzy31dmVNbOSAA
+
+Creature 骨骼动画教程 | 布料和头发
+https://pan.baidu.com/s/1-dYKVnUge351AY4EYoEn6g
+
+Creature 骨骼动画教程 | 附属动作
+https://pan.baidu.com/s/1hNl5IHnFvy8Sm1CGoCevzg
+
+Creature 骨骼动画教程 | 奔跑狐狸动画
+https://pan.baidu.com/s/1SXsgI1PSRu5dmJrB_hIADQ
 
 ## Overview
 
