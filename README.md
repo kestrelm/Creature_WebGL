@@ -9,11 +9,6 @@ Download the samples and more **[here](http://www.kestrelmoon.com/creaturedocs/A
 ![Alt text](https://github.com/kestrelm/Creature_WebGL/blob/master/babylonjs.png)
 Live Babylon JS Demo is **[here](http://creature.kestrelmoon.com/WebDemo/Babylon-Demo.html)**.
 
-## FAQ
-
-### My character mesh in BabylonJS flickers/disappears
-This is a BabylyJS renderer issue and has to do with the bounding box of the character. You can try setting **mesh.alwaysSelectAsActiveMesh = true**. Or refresh the mesh data and bounding box each frame. Please read the thread [here](https://github.com/kestrelm/Creature_WebGL/issues/10)
-
 ## Live Raptor Mark Demo
 
 **Raptor Mark** is a demonstration of what the **Creature WebGL** plugin is capable of. 
@@ -49,3 +44,9 @@ Read the writeup on the WebAssembly runtime **[here](<https://medium.com/@kestre
 ![Alt text](https://github.com/kestrelm/Creature_WebGL/blob/master/packPlayer.png)
 
 The **CreaturePack WebAssembly Widget** allows you to easily share your exported Creature animations on your own personal webpage! The rendering core uses the powerful [**BabylonJS 3D WebGL Engine**](https://www.babylonjs.com/). This allows for beautiful rendering effects, including high quality soft-shadows and real-time 3D lighting. Head over to the **WebAssembly** folder for more info [**here**](https://github.com/kestrelm/Creature_WebGL/tree/master/wasm).
+
+## FAQ
+
+### My character mesh in BabylonJS flickers/disappears
+This is a BabylyJS renderer issue and has to do with the bounding box of the character. You can try setting **mesh.alwaysSelectAsActiveMesh = true**. Or refresh the mesh data and bounding box each frame. Please read the thread [here](https://github.com/kestrelm/Creature_WebGL/issues/10)
+
