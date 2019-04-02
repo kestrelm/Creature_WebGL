@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.15.1/dist/phaser-arcade-physics.js"></script>
+    <script src="../msgpack.js"></script>
+    <script src="../CreaturePackModule.js"></script>
+    <script src="./CreaturePackPhaser3Obj.js"></script>
+</head>
+<body>
+
+    <script>
+    var config = {
+        type: Phaser.AUTO,
+        width: 1024,
+        height: 768,
+        physics: {
+            default: 'arcade',
+            arcade: {
+                gravity: { y: 0 }
+            }
+        },
+        scene: {
+            preload: preload,
+            create: create,
+            update: update
+        }
+    };
+
+    var game = new Phaser.Game(config);
+
+    var creature_char = null;
+    var frame_cnt = 0;
+
+    function preload ()
+    {
+        this.load.binary('char', '../fox2x.creature_pack');
+        this.load.image('texture', '../fox.png');
+
+        this.load.binary('horse_char', '../horseman.creature_pack');
+        this.load.image('horse_texture', '../horseman.png');
+
+        this.load.binary('bat_char', '../bat.creature_pack');
+        this.load.image('bat_texture', '../bat.png');
+    }
+
+    function create ()
+    {
+        this.add.text(10, 0, 'CreaturePack Runtimes for Phaser 3', { fontFamily: '"Roboto Condensed"', fontSize: 32, color: '#FFFF00'  });
+        this.cameras.main.backgroundColor.setTo(50,50,50);
+
+        var horse_char = this.make.CreaturePackObj({
+            byte_data_in: this.cache.binary.get('horse_char'),
+            texture_key: 'horse_texture',
+            x: 790,
+            y: 390
+        });
+        horse_char.speed = 0.06;
+        horse_char.scaleX = 28;
+        horse_char.scaleY = 28;
+        horse_char.pack_renderer.blendToAnimation("run", 0.1);
+
+        creature_char = this.make.CreaturePackObj({
+            byte_data_in: this.cache.binary.get('char'),
+            texture_key: 'texture',
+            x: 380,
+            y: 450
+        });
+        creature_char.scaleX = 20;
+        creature_char.scaleY = 20;
+
+        var bat_char = this.make.CreaturePackObj({
+            byte_data_in: this.cache.binary.get('bat_char'),
+            texture_key: 'bat_texture',
+            x: 330,
+            y: 300
+        });
+        bat_char.speed = 0.1;
+        bat_char.scaleX = 20;
+        bat_char.scaleY = 20;
+    }
+
+    function update (time, delta)
+    {
+        frame_cnt++;
+        if(frame_cnt % 150 == 0)
+        {
+            creature_char.pack_renderer.blendToAnimation("run", 0.03);
+        }
+        else if(frame_cnt % 501 == 0)
+        {
+            creature_char.pack_renderer.blendToAnimation("default", 0.06);            
+        }
+    }
+    </script>
+
+</body>
+</html>

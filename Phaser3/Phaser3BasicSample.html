@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.15.1/dist/phaser-arcade-physics.js"></script>
+    <script src="../msgpack.js"></script>
+    <script src="../CreaturePackModule.js"></script>
+    <script src="./CreaturePackPhaser3Obj.js"></script>
+</head>
+<body>
+
+    <script>
+    var config = {
+        type: Phaser.AUTO,
+        width: 800,
+        height: 600,
+        physics: {
+            default: 'arcade',
+            arcade: {
+                gravity: { y: 0 }
+            }
+        },
+        scene: {
+            preload: preload,
+            create: create,
+            update: update
+        }
+    };
+
+    var game = new Phaser.Game(config);
+
+    var creature_char = null;
+    var frame_cnt = 0;
+
+    function preload ()
+    {
+        this.load.binary('char', '../fox2x.creature_pack');
+        this.load.image('texture', '../fox.png');
+    }
+
+    function create ()
+    {
+        this.add.text(10, 0, 'CreaturePack Runtimes for Phaser 3', { fontFamily: '"Roboto Condensed"', fontSize: 32, color: '#FFFF00'  });
+        this.cameras.main.backgroundColor.setTo(50,50,50);
+
+        creature_char = this.make.CreaturePackObj({
+            byte_data_in: this.cache.binary.get('char'),
+            texture_key: 'texture',
+            x: 300,
+            y: 300
+        });
+        creature_char.scaleX = 15;
+        creature_char.scaleY = 15;
+    }
+
+    function update (time, delta)
+    {
+        frame_cnt++;
+        if(frame_cnt % 150 == 0)
+        {
+            creature_char.pack_renderer.blendToAnimation("run", 0.03);
+        }
+        else if(frame_cnt % 501 == 0)
+        {
+            creature_char.pack_renderer.blendToAnimation("default", 0.06);            
+        }
+    }
+    </script>
+
+</body>
+</html>
