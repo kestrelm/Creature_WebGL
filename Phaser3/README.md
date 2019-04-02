@@ -3,7 +3,7 @@
 This folder contains the **CreaturePack** high performance + compression runtimes for [Phaser 3](https://phaser.io/phaser3)
 You will need to export your animations usint the [Creature Animation Tool](https://creature.kestrelmoon.com/) to use these runtimes.
 
-![Alt text](https://github.com/kestrelm/Creature_WebGL/blob/master/Phaser3/packPlayer.png)
+![Alt text](https://github.com/kestrelm/Creature_WebGL/blob/master/Phaser3/title.png)
 
 ## Usage
 
