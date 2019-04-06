@@ -5,6 +5,12 @@ You will need to export your animations usint the [Creature Animation Tool](http
 
 ![Alt text](https://github.com/kestrelm/Creature_WebGL/blob/master/Phaser3/title.png)
 
+## Detailed Writeup
+
+![Alt tet](https://cdn-images-1.medium.com/max/1200/1*lbKI11CHM2W41r6ehl_Z8A.gif)
+
+A full writeup on how author a walking Flamingo animation asset from scratch using this runtime is available [here as well](https://medium.com/@kestrelm/2d-skeletal-animation-in-phaser-3-tutorial-3ed468fb6bd0)
+
 ## Usage
 
 Using this runtime is super simple! Take a look at **Phaser3BasicGroup.html** for a quick introduction.
