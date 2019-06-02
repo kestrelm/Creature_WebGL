@@ -35,35 +35,33 @@
 
 function CreatureRenderer(manager_in, texture_in)
 {
-	PIXI.mesh.Mesh.call(this, texture_in);
-	
 	this.creature_manager = manager_in;
-	this.texture = texture_in;
-	this.dirty = true;
-	this.blendMode = PIXI.blendModes.NORMAL;
+	var target_creature = this.creature_manager.target_creature;		
+	var mIndices = new Uint16Array(target_creature.global_indices.length);
+	for(var i = 0; i < mIndices.length; i++)
+	{
+		mIndices[i] = target_creature.global_indices[i];
+	}
+
+	PIXI.SimpleMesh.call(
+		this, 
+		texture_in, 
+		new Float32Array(target_creature.total_num_pts * 2),
+		new Float32Array(target_creature.total_num_pts * 2),
+		mIndices,
+		PIXI.DRAW_MODES.TRIANGLES);
+	
+	this.geometry.indexBuffer.static = false;
+	this.blendMode = PIXI.BLEND_MODES.NORMAL;
 	this.creatureBoundsMin = new PIXI.Point(0,0);
 	this.creatureBoundsMax = new PIXI.Point(0,0);
 	
-	var target_creature = this.creature_manager.target_creature;
-
-	this.vertices = new Float32Array(target_creature.total_num_pts * 2);
-	this.uvs = new Float32Array(target_creature.total_num_pts * 2);
-	
-	this.indices = new Uint16Array(target_creature.global_indices.length);
-	for(var i = 0; i < this.indices.length; i++)
-	{
-		this.indices[i] = target_creature.global_indices[i];
-	}
-	
 	this.colors = new Float32Array([1,1,1,1]);
-	
-	this.drawMode = PIXI.mesh.Mesh.DRAW_MODES.TRIANGLES;
-
 	this.UpdateRenderData(target_creature.global_pts, target_creature.global_uvs);
 };
 
 // constructor
-CreatureRenderer.prototype = Object.create(PIXI.mesh.Mesh.prototype);
+CreatureRenderer.prototype = Object.create(PIXI.SimpleMesh.prototype);
 CreatureRenderer.prototype.constructor = CreatureRenderer;
 
 
@@ -103,34 +101,41 @@ CreatureRenderer.prototype.refresh = function()
 	var target_creature = this.creature_manager.target_creature;
 	
 	var read_pts = target_creature.render_pts;
-	//var read_pts = target_creature.global_pts;
 	var read_uvs = target_creature.global_uvs;
 	
 	this.UpdateRenderData(read_pts, read_uvs);
 	this.UpdateCreatureBounds();
-	this.dirty = true;
+
+	var setUVs = this.geometry.getBuffer('aTextureCoord');
+	setUVs.update();
+	this.autoUpdate = true;
 };
 
 CreatureRenderer.prototype.EnableSkinSwap = function(swap_name_in, active)
 {
 	var target_creature = this.creature_manager.target_creature;
 	target_creature.EnableSkinSwap(swap_name_in, active);
-	this.indices = new Uint16Array(target_creature.final_skin_swap_indices.length);
-	for(var i = 0; i < this.indices.length; i++)
+
+	var setIndices = this.geometry.indexBuffer.data;	
+	setIndices = new Uint16Array(target_creature.final_skin_swap_indices.length);
+	for(var i = 0; i < setIndices.length; i++)
 	{
-		this.indices[i] = target_creature.final_skin_swap_indices[i];
-	}		
+		setIndices[i] = target_creature.final_skin_swap_indices[i];
+	}
+	this.geometry.indexBuffer.update();
 };
 
 CreatureRenderer.prototype.DisableSkinSwap = function()
 {
 	var target_creature = this.creature_manager.target_creature;
 	target_creature.DisableSkinSwap();
-	this.indices = new Uint16Array(target_creature.global_indices.length);
-	for(var i = 0; i < this.indices.length; i++)
+	var setIndices = this.geometry.indexBuffer.data;
+	setIndices = new Uint16Array(target_creature.global_indices.length);
+	for(var i = 0; i < setIndices.length; i++)
 	{
-		this.indices[i] = target_creature.global_indices[i];
-	}		
+		setIndices[i] = target_creature.global_indices[i];
+	}
+	this.geometry.indexBuffer.update();
 };
 
 CreatureRenderer.prototype.UpdateRenderData = function(inputVerts, inputUVs)
@@ -141,14 +146,15 @@ CreatureRenderer.prototype.UpdateRenderData = function(inputVerts, inputUVs)
 	var uv_index = 0;
 	
 	var write_pt_index = 0;
+	var setUVs = this.geometry.getBuffer('aTextureCoord').data;
 	
 	for(var i = 0; i < target_creature.total_num_pts; i++)
 	{
 		this.vertices[write_pt_index] = inputVerts[pt_index];
 		this.vertices[write_pt_index + 1] = -inputVerts[pt_index + 1];
 		
-		this.uvs[uv_index] = inputUVs[uv_index];
-		this.uvs[uv_index + 1] = inputUVs[uv_index + 1];
+		setUVs[uv_index] = inputUVs[uv_index];
+		setUVs[uv_index + 1] = inputUVs[uv_index + 1];
 		
 		pt_index += 3;
 		uv_index += 2;

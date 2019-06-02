@@ -93,25 +93,19 @@
 		);
 
 		// create an new instance of a pixi stage
-		var stage = new PIXI.Stage(0x000000);
+		var stage = new PIXI.Container();
 	
 		// create a renderer instance.
-		var renderer = PIXI.autoDetectRenderer(window.innerWidth, window.innerHeight);
-	
-		if (renderer.type == PIXI.WEBGL_RENDERER) {
-			console.log('Using WebGL');
-		} else {
-			console.log('Using Canvas');
-		};
-	
+		var renderer = new PIXI.Renderer(window.innerWidth, window.innerHeight);
+		
 		// add the renderer view element to the DOM
 		document.body.appendChild(renderer.view);
 	
 		// create a texture from an image path
 		var texture = PIXI.Texture.fromImage("skinSwap_character_img.png");
 	
-		var creatureContainer = new PIXI.DisplayObjectContainer();
-		creatureContainer.position.x = window.innerWidth / 2;
+		var creatureContainer = new PIXI.Container();
+		creatureContainer.position.x = window.innerWidth / 4;
 		creatureContainer.position.y = window.innerHeight / 2;
 	
 		creatureContainer.scale.set(45.0);

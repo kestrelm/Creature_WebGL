@@ -30,7 +30,7 @@
 <p>My first paragraph.</p>
 
 <script src="pixi.js"></script>
-<script src="https://raw.githubusercontent.com/toji/gl-matrix/master/dist/gl-matrix.js"></script>
+<script src="gl-matrix.js"></script>
 <script src="flatbuffers.js"></script>
 <script src="CreatureFlatData_generated.js"></script>
 <script src="CreatureMeshBone.js"></script>
@@ -71,16 +71,10 @@
 			new_manager.RunAtTime(0);
 			
 			// create an new instance of a pixi stage
-    		var stage = new PIXI.Stage(0x000000);
+    		var stage = new PIXI.Container();
  
     		// create a renderer instance.			
-    		var renderer = PIXI.autoDetectRenderer(window.innerWidth, window.innerHeight);
-    		
-    		if (renderer.type == PIXI.WEBGL_RENDERER) {
-  				console.log('Using WebGL');
-			} else {
-  				console.log('Using Canvas');
-			};
+    		var renderer =  new PIXI.Renderer(window.innerWidth, window.innerHeight);    	
  
     		// add the renderer view element to the DOM
     		document.body.appendChild(renderer.view);
@@ -89,11 +83,11 @@
     		//var texture = PIXI.Texture.fromImage("debug3Export_character_img.png");
     		var texture = PIXI.Texture.fromImage("iceDemonExport_character_img.png");
     		
-    		var creatureContainer = new PIXI.DisplayObjectContainer();
-			creatureContainer.position.x = window.innerWidth/2;
-			creatureContainer.position.y = window.innerHeight/2;
+    		var creatureContainer = new PIXI.Container();
+			creatureContainer.position.x = window.innerWidth/3;
+			creatureContainer.position.y = window.innerHeight/3;
 
-			creatureContainer.scale.set(35.0);
+			creatureContainer.scale.set(25.0);
 			stage.addChild(creatureContainer);
 			
 			var new_creature_renderer = new CreatureRenderer(new_manager, texture);
@@ -104,7 +98,7 @@
  
         		requestAnimationFrame( animate );
         		
-			    new_manager.Update(0.05);
+			    new_manager.Update(0.025);
 			    new_creature_renderer.refresh();
         		
         		// render the stage   
