@@ -36,33 +36,36 @@
 // CreaturePackRenderer
 function CreaturePackRenderer(pack_data_in, texture_in)
 {
-	PIXI.mesh.Mesh.call(this, texture_in);
-	
 	this.pack_data = pack_data_in;
 	this.pack_renderer = new CreatureHaxeBaseRenderer(this.pack_data);
+
+	var mIndices = new Uint16Array(this.pack_data.indices.length);
+    for(var i = 0; i < mIndices.length; i++)
+	{
+		mIndices[i] = this.pack_data.indices[i];
+	}
+
+	PIXI.SimpleMesh.call(
+		this, 
+		texture_in, 
+		new Float32Array(this.pack_renderer.render_points.length),
+		new Float32Array(this.pack_renderer.render_uvs.length),
+		mIndices,
+		PIXI.DRAW_MODES.TRIANGLES
+		);
+	
 	this.texture = texture_in;
 	this.dirty = true;
-	this.blendMode = PIXI.blendModes.NORMAL;
+	this.blendMode = PIXI.BLEND_MODES.NORMAL;
 	this.creatureBoundsMin = new PIXI.Point(0,0);
     this.creatureBoundsMax = new PIXI.Point(0,0);
-	
-	this.vertices  = new Float32Array(this.pack_renderer.render_points.length);
-	this.uvs = new Float32Array(this.pack_renderer.render_uvs.length);
-	
-	this.indices = new Uint16Array(this.pack_data.indices.length);
-    for(var i = 0; i < this.indices.length; i++)
-	{
-		this.indices[i] = this.pack_data.indices[i];
-	}
-	
+		
     this.colors = new Float32Array([1,1,1,1]);
     this.UpdateRenderData(this.pack_data.points, this.pack_data.uvs);
-	
-	this.drawMode = PIXI.mesh.Mesh.DRAW_MODES.TRIANGLES;
 };
 
 // constructor
-CreaturePackRenderer.prototype = Object.create(PIXI.mesh.Mesh.prototype);
+CreaturePackRenderer.prototype = Object.create(PIXI.SimpleMesh.prototype);
 CreaturePackRenderer.prototype.constructor = CreaturePackRenderer;
 
 CreaturePackRenderer.prototype.refresh = function()
@@ -71,20 +74,22 @@ CreaturePackRenderer.prototype.refresh = function()
 	var read_pts = this.pack_renderer.render_points;
 	var read_uvs = this.pack_renderer.render_uvs;	
     this.UpdateRenderData(read_pts, read_uvs);
-    
-	this.dirty = true;
+	
+	this.autoUpdate = true;
+	var setUVs = this.geometry.getBuffer('aTextureCoord');
+	setUVs.update();
 };
 
 CreaturePackRenderer.prototype.UpdateRenderData = function(inputVerts, inputUVs)
 {
 	var write_pt_index = 0;
-	
+	var setUVs = this.geometry.getBuffer('aTextureCoord').data;
 	for(var i = 0; i < this.pack_renderer.render_points.length; i+=2)
 	{
 		this.vertices [i] = this.pack_renderer.render_points[i];
 		this.vertices [i + 1] = -this.pack_renderer.render_points[i + 1];
 		
-		this.uvs[i] = this.pack_renderer.render_uvs[i];
-		this.uvs[i + 1] = this.pack_renderer.render_uvs[i + 1];		
+		setUVs[i] = this.pack_renderer.render_uvs[i];
+		setUVs[i + 1] = this.pack_renderer.render_uvs[i + 1];		
 	}
 };

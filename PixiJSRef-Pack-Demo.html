@@ -25,11 +25,11 @@
             var byte_array = new Uint8Array(response);
             console.log("Loaded CreaturePack Data with size: " + byte_array.byteLength);
             creature_pack = new CreaturePackLoader(byte_array.buffer);
-            var texture = PIXI.Texture.fromImage("fox.png");
+            var texture = PIXI.Texture.from("fox.png");
             
             // Start PixiJS     
     		// create a renderer instance.			
-    		var renderer = new PIXI.WebGLRenderer(window.innerWidth, window.innerHeight);
+    		var renderer = new PIXI.Renderer(window.innerWidth, window.innerHeight);
     		//Create a container object called the `stage`
             var stage = new PIXI.Container();
 
@@ -37,8 +37,8 @@
             document.body.appendChild(renderer.view);
             
             // Add CreaturePack objects
-            var creatureContainer = new PIXI.DisplayObjectContainer();
-			creatureContainer.position.x = window.innerWidth/2;
+            var creatureContainer = new PIXI.Container();
+			creatureContainer.position.x = window.innerWidth/4;
 			creatureContainer.position.y = window.innerHeight/2;
 
 			creatureContainer.scale.set(15.0);
