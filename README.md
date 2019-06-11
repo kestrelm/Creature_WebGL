@@ -59,6 +59,14 @@ Read the writeup on the WebAssembly runtime **[here](<https://medium.com/@kestre
 
 The **CreaturePack WebAssembly Widget** allows you to easily share your exported Creature animations on your own personal webpage! The rendering core uses the powerful [**BabylonJS 3D WebGL Engine**](https://www.babylonjs.com/). This allows for beautiful rendering effects, including high quality soft-shadows and real-time 3D lighting. Head over to the **WebAssembly** folder for more info [**here**](https://github.com/kestrelm/Creature_WebGL/tree/master/wasm).
 
+## License
+The **Creature Runtimes** operate under 2 License types depending on whether you own a Licensed copy of [Creature](https://creature.kestrelmoon.com) or not.
+- **People who own a licensed copy of Creature:** You use the standard **Creature License** included with the runtime code. **TLDR:** You are free to publish/modify/sell your product with the Creature runtimes without needing to state you are using the runtimes/put the copyright notice in your code/app. If you already have been using the Creature runtimes as a licensed owner of Creature, nothing changes :)
+
+- **Everyone else:** The runtimes are released under the very permissive [**Apache License**](https://choosealicense.com/licenses/apache-2.0/) :)
+
+***Both Licenses allow for private use and do not require any disclosure of your source code.***
+
 ## FAQ
 
 ### My character mesh in BabylonJS flickers/disappears
