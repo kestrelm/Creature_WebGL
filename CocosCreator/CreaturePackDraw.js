@@ -98,6 +98,10 @@ let CreaturePackDraw = cc.Class({
         // takking into account its original dimensions and your node dimensions
         // If you do not want proportional scaling, you should take a look at the
         // charRatio variable and not use it in the calculations for baseX and baseY
+        // If you do not want proprtional scaling but rather, want to respect the original character
+        // dimensions, you can try something like this:
+        // let baseX = (this._packRenderer.render_points[i] + midX) * someScaleFactor;
+        // let baseY = (this._packRenderer.render_points[i + 1] + midY) * someScaleFactor;
         let charScale = 2;
         let charWidth = (this._maxX - this._minX);
         let charHeight = (this._maxY - this._minY);
