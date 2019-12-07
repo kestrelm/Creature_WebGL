@@ -14,7 +14,7 @@
 // 3. Run your game.
 
 let creaturepack = require('./CreaturePackModule');
-let assembler = require('./CreaturePackDrawAssembler');
+let CreatureAssembler = require('./CreaturePackDrawAssembler');
 let packMeta = require('./CreaturePackMeta');
 let B64 = require('./base64');
 let renderEngine;
@@ -46,8 +46,8 @@ cc.loader.addDownloadHandlers({
 
 cc.game.once(cc.game.EVENT_ENGINE_INITED, function () {
     renderEngine = cc.renderer.renderEngine;
-    gfx = renderEngine.gfx;
-    math = renderEngine.math;
+    gfx = cc.gfx;
+    math = cc.vmath;
 
     _currMat = math.mat4.create();
 })
@@ -88,8 +88,13 @@ let CreaturePackDraw = cc.Class({
             h = this.node.height,
             appx = w * this.node.anchorX,
             appy = h * this.node.anchorY;
-        let a = matrix.m00, b = matrix.m01, c = matrix.m04, d = matrix.m05,
-            tx = matrix.m12, ty = matrix.m13;
+
+        let _m00 = matrix.m[0];
+        let _m04 = matrix.m[4];
+        let _m12 = matrix.m[12];
+        let _m01 = matrix.m[1];
+        let _m05 = matrix.m[5];
+        let _m13 = matrix.m[13];            
 
         let x, y = 0;
         let j = 0;
@@ -120,8 +125,8 @@ let CreaturePackDraw = cc.Class({
             x = -appx + baseX;
             y = -appy + baseY;
 
-            var finalX = x * a + y * c + tx;
-            var finalY = x * b + y * d + ty;
+            var finalX = x * _m00 + y * _m04 + _m12;
+            var finalY = x * _m01 + y * _m05 + _m13;
             verts[j++] = finalX;
             verts[j++] = finalY;
 
@@ -150,7 +155,7 @@ let CreaturePackDraw = cc.Class({
         // it seems to be fine after that and does not affect the final result
         let verts = this._vData,
             uintV = this._uintVData;
-        this._vb.update(0, verts);
+        //this._vb.update(0, verts);
     },
 
     _createIA (withPack) {
@@ -238,7 +243,7 @@ let CreaturePackDraw = cc.Class({
         }
 
         if(this._ia == null) {
-            this._ia = new renderEngine.InputAssembler();
+            this._ia = new cc.renderer.InputAssembler(this._vb, this._ib);
         }
 
         this._ia._vertexBuffer = this._vb;
@@ -289,8 +294,8 @@ let CreaturePackDraw = cc.Class({
     onEnable () {
         this._super();
 
-        this.node._renderFlag &= ~cc.RenderFlow.FLAG_RENDER;
-        this.node._renderFlag |= cc.RenderFlow.FLAG_CUSTOM_IA_RENDER;
+        //this.node._renderFlag &= ~cc.RenderFlow.FLAG_RENDER;
+        //this.node._renderFlag |= cc.RenderFlow.FLAG_CUSTOM_IA_RENDER;
     },
 
     updatePackRenderData (timestep) {
@@ -418,7 +423,9 @@ let CreaturePackDraw = cc.Class({
         // Now load the texture of the character
        if(this.charTexture != null)
        {
-        this._material.texture = this.charTexture ;
+        this._material = cc.Material.getInstantiatedBuiltinMaterial('2d-sprite', this);
+        this._material.setProperty('texture', this.charTexture);
+        this.setMaterial(0, this._material);
         cc.log("Loaded Character Texture.");
        }
        else {
@@ -431,22 +438,24 @@ let CreaturePackDraw = cc.Class({
         var self = this;
         var changeAwareList = this._changeAwareList;
 
-        for(var i = 0; i < changeAwareList.length; i++)
-        {
-            var curKey = changeAwareList[i];
-            var inChangeProps = (curKey in this._changeProps);
-            if(!inChangeProps)
+        if(changeAwareList != null) {
+            for(var i = 0; i < changeAwareList.length; i++)
             {
-                shouldReload = true;
-                this._changeProps[curKey] = self[curKey];
-            }
+                var curKey = changeAwareList[i];
+                var inChangeProps = (curKey in this._changeProps);
+                if(!inChangeProps)
+                {
+                    shouldReload = true;
+                    this._changeProps[curKey] = self[curKey];
+                }
 
-            if(this._changeProps[curKey] != self[curKey])
-            {
-                shouldReload = true;
-                this._changeProps[curKey] = self[curKey];
+                if(this._changeProps[curKey] != self[curKey])
+                {
+                    shouldReload = true;
+                    this._changeProps[curKey] = self[curKey];
+                }
             }
-        }
+        }   
 
         if(shouldReload)
         {
@@ -454,12 +463,7 @@ let CreaturePackDraw = cc.Class({
         }
     },
 
-    // LIFE-CYCLE CALLBACKS:
-    onLoad () {
-        this._material = new renderEngine.SpriteMaterial();
-        this._material.useTexture = true;
-        this._material.useColor = false;
-
+    initData() {
         this._packData = null;
         this._packRenderer = null;
         this._timeStep = 0.8;
@@ -480,9 +484,22 @@ let CreaturePackDraw = cc.Class({
         this._meshColorOverrides = {};
 
         // Here we load our assets using the cc.loader methods
-
         this._createIA(false);
         this.processReload();
+    },
+
+    // LIFE-CYCLE CALLBACKS:
+    ctor () {
+        this.initData();
+    },
+
+    __preload () {
+        this._assembler = CreatureAssembler.prototype;
+        //this._resetAssembler();
+    },
+
+    onLoad () {
+        this.initData();
     },
 
     setMeshColorOverride (regionName, r, g, b, a) {
@@ -519,7 +536,6 @@ let CreaturePackDraw = cc.Class({
         this.processReload();
         this.updatePackRenderData(this._timeStep);
         this.node.getWorldMatrix(_currMat);
-
         if(this._packRenderer == null)
         {
             this._updateDefaultVertexData(_currMat);
@@ -529,7 +545,5 @@ let CreaturePackDraw = cc.Class({
         }
     }
 });
-
-CreaturePackDraw._assembler = assembler;
 
 module.exports = CreaturePackDraw;
