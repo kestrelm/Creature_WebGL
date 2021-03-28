@@ -1,9 +1,9 @@
-import SimpleHTTPServer
-import SocketServer
+import http.server
+import socketserver
 
 PORT = 8887
 
-class Handler(SimpleHTTPServer.SimpleHTTPRequestHandler):
+class Handler(http.server.SimpleHTTPRequestHandler):
     pass
 
 Handler.extensions_map= {
@@ -18,6 +18,6 @@ Handler.extensions_map= {
 	'': 'application/octet-stream', # Default
     }
 
-httpd = SocketServer.TCPServer(("127.0.0.1", PORT), Handler)
-print "serving at port", PORT
+httpd = socketserver.TCPServer(("127.0.0.1", PORT), Handler)
+print ("Serving at port: %d" %PORT)
 httpd.serve_forever()
