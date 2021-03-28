@@ -22,7 +22,6 @@
         scene: {
             preload: preload,
             create: create,
-            update: update
         }
     };
 
@@ -51,17 +50,11 @@
         creature_char = new CreaturePackObj(this, 400, 300, this.cache.binary.get('char'), 'texture');
         // To access the mesh ( which is a Phaser 3 object, use creature_char.mesh )
         // Here we setup the character size by tweaking the modelScale on the mesh object
-        creature_char.mesh.modelScale.x = 0.1;
-        creature_char.mesh.modelScale.y = 0.1;
+        creature_char.modelScale.x = 0.1;
+        creature_char.modelScale.y = 0.1;
 
         // Set character animation clip
         creature_char.pack_renderer.setActiveAnimation("walk");
-    }
-
-    function update (time, delta)
-    {
-        // We tick the Creature character to update its animation state
-        creature_char.tick(time, delta);
     }
     </script>
 

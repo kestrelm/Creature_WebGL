@@ -49,29 +49,25 @@
         this.cameras.main.backgroundColor.setTo(50,50,50);
 
         horse_char = new CreaturePackObj(this, 790, 390, this.cache.binary.get('horse_char'), 'horse_texture');
-        horse_char.mesh.modelScale.x = 0.1;
-        horse_char.mesh.modelScale.y = 0.1;
+        horse_char.modelScale.x = 0.1;
+        horse_char.modelScale.y = 0.1;
 
         horse_char.speed = 0.06;
         horse_char.pack_renderer.blendToAnimation("run", 0.1);
 
         creature_char = new CreaturePackObj(this, 380, 450, this.cache.binary.get('char'), 'texture');
-        creature_char.mesh.modelScale.x = 0.07;
-        creature_char.mesh.modelScale.y = 0.07;
+        creature_char.modelScale.x = 0.07;
+        creature_char.modelScale.y = 0.07;
 
         bat_char = new CreaturePackObj(this, 330, 300, this.cache.binary.get('bat_char'), 'bat_texture');
-        bat_char.mesh.modelScale.x = 0.1;
-        bat_char.mesh.modelScale.y = 0.1;
+        bat_char.modelScale.x = 0.1;
+        bat_char.modelScale.y = 0.1;
 
         bat_char.speed = 0.1;
     }
 
     function update (time, delta)
     {
-        horse_char.tick(time, delta);
-        creature_char.tick(time, delta);
-        bat_char.tick(time, delta);
-
         frame_cnt++;
         if(frame_cnt % 150 == 0)
         {
