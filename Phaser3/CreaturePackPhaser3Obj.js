@@ -47,12 +47,19 @@ var CreaturePackObj = new Phaser.Class({
         this.pack_data = new CreaturePackLoader(byte_array.buffer);
 
         this.pack_renderer = new CreatureHaxeBaseRenderer(this.pack_data);
-        var indices_num = this.pack_data.indices.length; // Also number of points since Phaser 3 does not allow for efficient indices rendering
-        
-		var create_vertices = new Float32Array(indices_num * 2);
-        var create_uvs = new Float32Array(indices_num * 2);
-        var create_colors = new Uint32Array(indices_num * 2);
-        var create_alphas = new Float32Array(indices_num * 2);
+        this.pack_renderer.stepTime(0);
+        this.pack_renderer.syncRenderData();
+
+        var indices = this.pack_data.indices;
+
+        var render_pts = this.pack_renderer.render_points;
+        var render_uvs = this.pack_renderer.render_uvs;
+        var render_colors = this.pack_renderer.render_colors;
+
+		var create_vertices = new Float32Array(render_pts.length);
+        var create_uvs = new Float32Array(render_uvs.length);
+        var create_colors = new Uint32Array(render_pts.length);
+        var create_alphas = new Float32Array(render_pts.length);
 
         for(var i = 0; i < create_colors.length; i++)
         {
@@ -69,14 +76,16 @@ var CreaturePackObj = new Phaser.Class({
             scene,
             x,
             y,
-            create_vertices,
-            create_uvs,
+            texture_key,
+            null,
+            render_pts,
+            render_uvs,
+            indices,
+            false,
             [],
-            create_alphas,
-            texture_key
+            create_colors,
+            create_alphas
         );          
-
-        var haha = 0;
     },
 
     getPackRGBA: function (r, g, b, a)
@@ -98,22 +107,23 @@ var CreaturePackObj = new Phaser.Class({
         render_pts = this.pack_renderer.render_points;
         render_uvs = this.pack_renderer.render_uvs;
         render_colors = this.pack_renderer.render_colors;
-
-
-        for(var i = 0; i < indices.length; i++)
+        
+        var pLen = render_pts.length / 2;
+        for(var i = 0; i < pLen; i++)
         {
-            var idx = indices[i] * 2;
-            this.vertices[i * 2] = render_pts[idx];
-            this.vertices[i * 2 + 1] = -render_pts[idx + 1];
+            var cVertex = this.vertices[i];
+            cVertex.x = render_pts[i * 2];
+            cVertex.y = -render_pts[i * 2 + 1];
 
-            this.uv[i * 2] = render_uvs[idx];
-            this.uv[i * 2 + 1] = render_uvs[idx + 1];
+            cVertex.u = render_uvs[i * 2];
+            cVertex.v = render_uvs[i * 2 + 1];
             
-            var r = render_colors[indices[i] * 4];
-            var g = render_colors[indices[i] * 4];
-            var b = render_colors[indices[i] * 4];
-            this.colors[i] = this.getPackRGBA(r, g, b, 1);
-            this.alphas[i] = render_colors[indices[i] * 4 + 3];
+            var r = render_colors[i * 4];
+            var g = render_colors[i * 4 + 1];
+            var b = render_colors[i * 4 + 2];
+            cVertex.color = this.getPackRGBA(r, g, b, 1);
+
+            cVertex.alpha = render_colors[i * 4 + 3];
         }                     
     }
 
@@ -136,16 +146,26 @@ Phaser.GameObjects.GameObjectCreator.register('CreaturePackObj', function (confi
     }
 
     Phaser.GameObjects.BuildGameObject(this.scene, creature_char, config);
-    this.displayList.add(creature_char);
-    this.updateList.add(creature_char);
-return creature_char;
+
+    if(!config.add)
+    {
+        this.updateList.add(creature_char);
+    }
+
+    return creature_char;
 });
 
 if (typeof WEBGL_RENDERER)
 {
-    Phaser.GameObjects.GameObjectFactory.register('CreaturePackObj', function (x, y, byte_data_in, texture_key)
+    Phaser.GameObjects.GameObjectFactory.register('CreaturePackObj', function (config)
     {
+        if (config === undefined) { config = {}; }
+        var x = Phaser.Utils.Objects.GetValue(config, 'x', 0);
+        var y = Phaser.Utils.Objects.GetValue(config, 'y', 0);
+        var texture_key = Phaser.Utils.Objects.GetAdvancedValue(config, 'texture_key', null);
+        var byte_data_in = Phaser.Utils.Objects.GetAdvancedValue(config, 'byte_data_in', null);
+    
         var new_obj = new CreaturePackObj(this.scene, x, y, byte_data_in, texture_key);
-        return new_obj;
+        return this.displayList.add(new_obj);
     });
 }
