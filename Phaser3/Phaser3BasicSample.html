@@ -42,15 +42,12 @@
         this.add.text(10, 0, 'CreaturePack Runtimes for Phaser 3', { fontFamily: '"Roboto Condensed"', fontSize: 32, color: '#FFFF00'  });
         this.cameras.main.backgroundColor.setTo(50,50,50);
         creature_char = new CreaturePackObj(this, 400, 300, this.cache.binary.get('char'), 'texture');
-        // To access the mesh ( which is a Phaser 3 object, use creature_char.mesh )
-        creature_char.mesh.modelScale.x = 0.1;
-        creature_char.mesh.modelScale.y = 0.1;
+        creature_char.modelScale.x = 0.1;
+        creature_char.modelScale.y = 0.1;
     }
 
     function update (time, delta)
     {
-        creature_char.tick(time, delta);
-
         frame_cnt++;
         if(frame_cnt % 150 == 0)
         {
