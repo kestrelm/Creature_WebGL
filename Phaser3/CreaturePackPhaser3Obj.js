@@ -33,13 +33,16 @@
  * RUNTIMES.
  *****************************************************************************/
 
-var CreaturePackObj = new Phaser.Class({
+// This is an class that will create a Phaser 3 Mesh object and include it as part of the class under:
+// - mesh
+// Access mesh to resize, transform etc just like a regular Phaser 3 Mesh Object
+// You should call the tick() method in your game's update() method to update the CreaturePackObj animation state
 
-    Extends: Phaser.GameObjects.Mesh,
+var CreaturePackObj = new Phaser.Class({
 
     initialize:
 
-    function CreaturePackObj (scene, x, y, byte_data_in, texture_key)
+    function CreaturePackObj (scene, x, y, byte_data_in, texture_key, panZVal=7)
     {
         this.speed = 0.05;
 
@@ -47,12 +50,19 @@ var CreaturePackObj = new Phaser.Class({
         this.pack_data = new CreaturePackLoader(byte_array.buffer);
 
         this.pack_renderer = new CreatureHaxeBaseRenderer(this.pack_data);
-        var indices_num = this.pack_data.indices.length; // Also number of points since Phaser 3 does not allow for efficient indices rendering
-        
-		var create_vertices = new Float32Array(indices_num * 2);
-        var create_uvs = new Float32Array(indices_num * 2);
-        var create_colors = new Uint32Array(indices_num * 2);
-        var create_alphas = new Float32Array(indices_num * 2);
+        this.pack_renderer.stepTime(0);
+        this.pack_renderer.syncRenderData();
+
+        var indices = this.pack_data.indices;
+
+        var render_pts = this.pack_renderer.render_points;
+        var render_uvs = this.pack_renderer.render_uvs;
+        var render_colors = this.pack_renderer.render_colors;
+
+		var create_vertices = new Float32Array(render_pts.length);
+        var create_uvs = new Float32Array(render_uvs.length);
+        var create_colors = new Uint32Array(render_pts.length);
+        var create_alphas = new Float32Array(render_pts.length);
 
         for(var i = 0; i < create_colors.length; i++)
         {
@@ -64,19 +74,10 @@ var CreaturePackObj = new Phaser.Class({
             create_alphas[i] = 1.0;
         }
 
-        Phaser.GameObjects.Mesh.call(
-            this,
-            scene,
-            x,
-            y,
-            create_vertices,
-            create_uvs,
-            [],
-            create_alphas,
-            texture_key
-        );          
-
-        var haha = 0;
+        this.mesh = scene.add.mesh(x, y, texture_key);
+        this.mesh.addVertices(render_pts, render_uvs, indices);
+        this.mesh.ignoreDirtyCache = true;
+        this.mesh.panZ(panZVal);      
     },
 
     getPackRGBA: function (r, g, b, a)
@@ -89,7 +90,7 @@ var CreaturePackObj = new Phaser.Class({
         return ((ua << 24) | (ur << 16) | (ug << 8) | ub) >>> 0;
     },
 
-    preUpdate: function (time, delta)
+    tick: function (time, delta)
     {
         this.pack_renderer.stepTime(delta * this.speed);
         this.pack_renderer.syncRenderData();
@@ -99,53 +100,25 @@ var CreaturePackObj = new Phaser.Class({
         render_uvs = this.pack_renderer.render_uvs;
         render_colors = this.pack_renderer.render_colors;
 
-
+        // Unfortunately, Phaser still does not have a proper efficient way of rendering meshes with indices
+        // It seems Phase still "unrolls" the mesh without any considerations for vertices sharing multiple indices
+        // This means indices.length == this.mesh.getVertexCount() which is not good for performance
         for(var i = 0; i < indices.length; i++)
         {
+            var cVertex = this.mesh.vertices[i];
             var idx = indices[i] * 2;
-            this.vertices[i * 2] = render_pts[idx];
-            this.vertices[i * 2 + 1] = -render_pts[idx + 1];
+            cVertex.x = render_pts[idx];
+            cVertex.y = render_pts[idx + 1];
 
-            this.uv[i * 2] = render_uvs[idx];
-            this.uv[i * 2 + 1] = render_uvs[idx + 1];
+            cVertex.u = render_uvs[idx];
+            cVertex.v = render_uvs[idx + 1];
             
             var r = render_colors[indices[i] * 4];
             var g = render_colors[indices[i] * 4];
             var b = render_colors[indices[i] * 4];
-            this.colors[i] = this.getPackRGBA(r, g, b, 1);
-            this.alphas[i] = render_colors[indices[i] * 4 + 3];
+            cVertex.colors = this.getPackRGBA(r, g, b, 1);
+            cVertex.alphas = render_colors[indices[i] * 4 + 3];
         }                     
     }
 
 });
-
-Phaser.GameObjects.GameObjectCreator.register('CreaturePackObj', function (config, addToScene)
-{
-    if (config === undefined) { config = {}; }
-
-    var x = Phaser.Utils.Objects.GetValue(config, 'x', 0);
-    var y = Phaser.Utils.Objects.GetValue(config, 'y', 0);
-    var texture_key = Phaser.Utils.Objects.GetAdvancedValue(config, 'texture_key', null);
-    var byte_data_in = Phaser.Utils.Objects.GetAdvancedValue(config, 'byte_data_in', null);
-
-    var creature_char = new CreaturePackObj(this.scene, x, y, byte_data_in, texture_key);
-
-    if (addToScene !== undefined)
-    {
-        config.add = addToScene;
-    }
-
-    Phaser.GameObjects.BuildGameObject(this.scene, creature_char, config);
-    this.displayList.add(creature_char);
-    this.updateList.add(creature_char);
-return creature_char;
-});
-
-if (typeof WEBGL_RENDERER)
-{
-    Phaser.GameObjects.GameObjectFactory.register('CreaturePackObj', function (x, y, byte_data_in, texture_key)
-    {
-        var new_obj = new CreaturePackObj(this.scene, x, y, byte_data_in, texture_key);
-        return new_obj;
-    });
-}

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <script src="https://cdn.jsdelivr.net/npm/phaser@3.15.1/dist/phaser-arcade-physics.js"></script>
+    <script src="https://github.com/photonstorm/phaser/releases/download/v3.54.0/phaser.min.js"></script>
     <script src="../msgpack.js"></script>
     <script src="../CreaturePackModule.js"></script>
     <script src="./CreaturePackPhaser3Obj.js"></script>
@@ -41,19 +41,18 @@
         this.add.text(10, 0, 'CreaturePack Runtimes for Phaser 3', { fontFamily: '"Roboto Condensed"', fontSize: 32, color: '#FFFF00'  });
         this.cameras.main.backgroundColor.setTo(50,50,50);
 
-        creature_char = this.make.CreaturePackObj({
-            byte_data_in: this.cache.binary.get('char'),
-            texture_key: 'texture',
-            x: 480,
-            y: 330
-        });
-        creature_char.scaleX = 90;
-        creature_char.scaleY = 90;
-
+        // Load our CreaturePack character
+        creature_char = new CreaturePackObj(this, 480, 300, this.cache.binary.get('char'), 'texture');
+        // To access the mesh ( which is a Phaser 3 object, use creature_char.mesh )
+        // Here we setup the character size by tweaking the modelScale on the mesh object
+        creature_char.mesh.modelScale.x = 0.3;
+        creature_char.mesh.modelScale.y = 0.3;
     }
 
     function update (time, delta)
     {
+        // We tick the Creature character to update its animation state
+        creature_char.tick(time, delta);
     }
     </script>
 
