@@ -101,7 +101,7 @@ class CreaturePackAnimClip{
 
 	correctTime(timeIn, withLoop) 
 	{
-		if (this.withLoop == false) {
+		if (withLoop == false) {
 			if (timeIn < this.startTime) {
 				return this.startTime;
 			} else if (timeIn > this.endTime) {
@@ -574,8 +574,9 @@ class CreatureHaxeBaseRenderer
 	}
 
 	// Sets an active animation without blending
-	setActiveAnimation(nameIn) {
+	setActiveAnimation(nameIn, loop = true) {
 		if (this.runTimeMap.hasOwnProperty(nameIn)) {
+			this.isLooping = loop;
 			this.activeAnimationName = nameIn;
 			this.prevAnimationName = nameIn;
 			this.runTimeMap[this.activeAnimationName] = this.data.animClipMap[this.activeAnimationName].startTime;
@@ -583,7 +584,8 @@ class CreatureHaxeBaseRenderer
 	}
 
 	// Smoothly blends to a target animation
-	blendToAnimation(nameIn, blendDelta) {
+	blendToAnimation(nameIn, blendDelta, loop = true) {
+		this.isLooping = loop;
 		this.prevAnimationName = this.activeAnimationName;
 		this.activeAnimationName = nameIn;
 		this.animBlendFactor = 0;
